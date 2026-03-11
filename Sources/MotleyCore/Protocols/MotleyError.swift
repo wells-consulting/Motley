@@ -5,7 +5,7 @@
 
 import Foundation
 
-/// Common protocol for errors thrown.
+/// Common protocol for errors thrown by Motley modules.
 
 public protocol MotleyError: Error, LocalizedError, Sendable {
 
@@ -34,21 +34,22 @@ public protocol MotleyError: Error, LocalizedError, Sendable {
 
     // Required, user-facing
 
+    /// A concise description of what went wrong.
     var summary: String { get }
 
     // Optional, user-facing
 
-    /// Dialog title for UI
-    var alertTitle: String? { get }
+    /// A short title categorizing the error (e.g. "HTTP Error", "Decoding Error").
+    var title: String? { get }
 
-    /// Detailed reasoning for the error that would help a tech-savy
+    /// Detailed reasoning for the error that would help a tech-savvy
     /// user. It may, for example, include the HTTP status code.
     var details: String? { get }
 
     // Optional, developer-facing
 
-    /// The originating errors.
-    var underlyingErrors: [any Error]? { get }
+    /// The originating error, if this error wraps another.
+    var underlyingError: (any Error)? { get }
 
     /// Unstructured data that might be useful for a client to
     /// silently handle the error in code.
@@ -68,12 +69,13 @@ public extension MotleyError {
         }
     }
 
-    /// Default refcode.
-    var refcode: String? {
-        nil
-    }
+    var refcode: String? { nil }
+    var title: String? { nil }
+    var details: String? { nil }
+    var underlyingError: (any Error)? { nil }
+    var userInfo: [String: any Sendable]? { nil }
 
-    /// Default diagnostics.
+    /// Produce a human-readable diagnostic string for this error.
     func diagnostics(options: MotleyErrorUtils.ErrorDescriptionOptions) -> String? {
         MotleyErrorUtils.describe(self, options: options)
     }
@@ -91,26 +93,19 @@ public enum MotleyErrorUtils {
             self.rawValue = rawValue
         }
 
-        public static let summary: Self = .init(rawValue: 1 << 1)
         public static let details: Self = .init(rawValue: 1 << 2)
-        public static let underlyingErrors: Self = .init(rawValue: 1 << 3)
-        public static let userInfo: Self = .init(rawValue: 1 << 4)
+        public static let underlyingError: Self = .init(rawValue: 1 << 3)
         public static let nsError: Self = .init(rawValue: 1 << 5)
 
-        public static let minimal: Self = [
-            .summary,
-        ]
+        public static let minimal: Self = []
 
         public static let basic: Self = [
-            .summary,
             .details,
         ]
 
         public static let verbose: Self = [
-            .summary,
             .details,
-            .underlyingErrors,
-            .userInfo,
+            .underlyingError,
             .nsError,
         ]
     }
@@ -118,63 +113,49 @@ public enum MotleyErrorUtils {
     public static func describe(
         _ error: any Error,
         options: ErrorDescriptionOptions,
-        indenting indent: Int = 0,
+        depth: Int = 0,
     ) -> String {
 
         var lines = [String]()
 
-        let indentString = String(repeating: "    ", count: indent)
-        if indent > 0 { lines.append("Underlying Error #\(indent) (\(type(of: error)))") }
+        let indent = String(repeating: "    ", count: depth)
 
-        var adjustedOptions = options
-
-        if indent != 0 {
-
-            if let motleyError = error as? (any MotleyError) {
-                lines.append(indentString + "\(motleyError.summary)")
-                if adjustedOptions.contains(.details), let details = motleyError.details {
-                    lines.append(indentString + details)
-                }
-                if adjustedOptions.contains(.userInfo), let userInfo = motleyError.userInfo, !userInfo.isEmpty {
-                    lines.append(indentString + String(describing: userInfo))
-                }
-            } else {
-                adjustedOptions.remove(.nsError)
-                lines.append(indentString + "\(error)")
+        if let motleyError = error as? (any MotleyError) {
+            if depth > 0 {
+                lines.append("Underlying Error (\(type(of: error)))")
             }
+            lines.append(indent + motleyError.summary)
+            if options.contains(.details), let details = motleyError.details {
+                lines.append(indent + details)
+            }
+        } else {
+            if depth > 0 {
+                lines.append("Underlying Error (\(type(of: error)))")
+            }
+            lines.append(indent + "\(error)")
+        }
 
-            if adjustedOptions.contains(.nsError) {
+        if options.contains(.nsError) {
+            let nsError = error as NSError
+            let domain = nsError.domain
+            let skipNSError = domain.hasPrefix("MotleyCore")
+                || (domain == "NSCocoaErrorDomain" && nsError.code == 0)
 
-                let nsError = error as NSError
-
-                var include = true
-                let domain = nsError.domain
-                include = include && !domain.hasPrefix("MotleyCore")
-                include = include && (domain != "NSCocoaErrorDomain" || nsError.code != 0)
-
-                if include {
-                    var line = "Error Domain=\(domain), "
-                    line += "Code=\(nsError.code)"
-                    if !nsError.userInfo.isEmpty {
-                        line += " \(String(describing: nsError.userInfo))"
-                    }
-                    lines.append(indentString + line)
+            if !skipNSError {
+                var line = "Error Domain=\(domain), Code=\(nsError.code)"
+                if !nsError.userInfo.isEmpty {
+                    line += " \(String(describing: nsError.userInfo))"
                 }
+                lines.append(indent + line)
             }
         }
 
-        let underlyingErrors = (error as? (any MotleyError))?.underlyingErrors ?? []
-
-        if !underlyingErrors.isEmpty {
-            for underlyingError in underlyingErrors {
-                lines.append("\n" +
-                    Self.describe(
-                        underlyingError,
-                        options: options,
-                        indenting: indent + 1,
-                    ),
-                )
-            }
+        if options.contains(.underlyingError),
+           let underlying = (error as? (any MotleyError))?.underlyingError
+        {
+            lines.append(
+                "\n" + Self.describe(underlying, options: options, depth: depth + 1),
+            )
         }
 
         return lines.joined(separator: "\n")

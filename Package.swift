@@ -48,5 +48,10 @@ let package = Package(
                 .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins"),
             ],
         ),
+        .testTarget(
+            name: "MotleyUITests",
+            dependencies: ["MotleyUI"],
+            path: "Tests/MotleyUITests",
+        ),
     ],
 )
