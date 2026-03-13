@@ -11,16 +11,15 @@ let package = Package(
         .macOS(.v15),
     ],
     products: [
-        .library(name: "MotleyCore", targets: ["MotleyCore"]),
-        .library(name: "MotleyUI", targets: ["MotleyUI"]),
+        .library(name: "Motley", targets: ["Motley"]),
     ],
     dependencies: [
         .package(url: "https://github.com/SimplyDanny/SwiftLintPlugins", from: "0.63.0"),
     ],
     targets: [
         .target(
-            name: "MotleyCore",
-            path: "Sources/MotleyCore",
+            name: "Motley",
+            path: "Sources",
             swiftSettings: [
                 .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
                 .enableUpcomingFeature("InferIsolatedConformances"),
@@ -31,27 +30,9 @@ let package = Package(
             ],
         ),
         .testTarget(
-            name: "MotleyCoreTests",
-            dependencies: ["MotleyCore"],
-            path: "Tests/MotleyCoreTests",
-        ),
-        .target(
-            name: "MotleyUI",
-            dependencies: ["MotleyCore"],
-            path: "Sources/MotleyUI",
-            swiftSettings: [
-                .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
-                .enableUpcomingFeature("InferIsolatedConformances"),
-                .enableUpcomingFeature("ExistentialAny"),
-            ],
-            plugins: [
-                .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins"),
-            ],
-        ),
-        .testTarget(
-            name: "MotleyUITests",
-            dependencies: ["MotleyUI"],
-            path: "Tests/MotleyUITests",
+            name: "Tests",
+            dependencies: ["Motley"],
+            path: "Tests",
         ),
     ],
 )
