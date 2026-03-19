@@ -20,6 +20,9 @@ let package = Package(
         .target(
             name: "Motley",
             path: "Sources",
+            resources: [
+                .process("PrivacyInfo.xcprivacy"),
+            ],
             swiftSettings: [
                 .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
                 .enableUpcomingFeature("InferIsolatedConformances"),
