@@ -4,5 +4,5 @@
 //
 
 public enum MotleyInfo {
-    public static let version = "0.9.5"
+    public static let version = "0.9.6"
 }
