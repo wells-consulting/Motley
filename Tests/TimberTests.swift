@@ -462,6 +462,37 @@ struct TimberSinkTests {
     #endif
 }
 
+// MARK: - shortFile helper
+
+@Suite("Timber.shortFile")
+struct TimberShortFileTests {
+
+    @Test("Strips module prefix and extension")
+    func stripsModuleAndExtension() {
+        #expect(Timber.shortFile("Motley/Labrador.swift") == "Labrador")
+    }
+
+    @Test("Strips base-class prefix when + is present")
+    func stripsBaseClassPrefix() {
+        #expect(Timber.shortFile("MotleyPlayer/StashBackend+Scene.swift") == "Scene")
+        #expect(Timber.shortFile("MotleyPlayer/StashBackend+GraphQL.swift") == "GraphQL")
+        #expect(Timber.shortFile("MotleyPlayer/StashBackend+ServerInfo.swift") == "ServerInfo")
+        #expect(Timber.shortFile("App/AppViewModel+Settings.swift") == "Settings")
+        #expect(Timber.shortFile("App/DLNABackend+Adapter.swift") == "Adapter")
+    }
+
+    @Test("Leaves names without + unchanged")
+    func noPlus() {
+        #expect(Timber.shortFile("App/AppViewModel.swift") == "AppViewModel")
+        #expect(Timber.shortFile("App/MotleyPlayerApp.swift") == "MotleyPlayerApp")
+    }
+
+    @Test("Works when fileID has no slash")
+    func noSlash() {
+        #expect(Timber.shortFile("Labrador.swift") == "Labrador")
+    }
+}
+
 // MARK: - LogEntry
 
 #if canImport(os)
