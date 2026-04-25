@@ -5,7 +5,7 @@
 
 import Foundation
 
-public struct EarlError: Yikes {
+public struct EarlError: MotleyError {
 
     // MARK: - Properties
 

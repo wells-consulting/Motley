@@ -5,7 +5,7 @@
 
 import Foundation
 
-public struct LabradorError: Yikes {
+public struct LabradorError: MotleyError {
 
     // MARK: - Properties
 
@@ -143,7 +143,7 @@ public struct LabradorError: Yikes {
 
     // MARK: Factory Methods
 
-    public static func noURL() -> any Yikes {
+    public static func noURL() -> any MotleyError {
         LabradorError(
             summary: "Request has no URL.",
         )

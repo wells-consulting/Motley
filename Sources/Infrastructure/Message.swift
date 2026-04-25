@@ -7,7 +7,7 @@ import Foundation
 
 /// A structured notice with summary text, optional details, and a tone
 /// that indicates how it should be presented to the user.
-public struct Yo: Hashable, Codable, Sendable { // swiftlint:disable:this type_name
+public struct Message: Hashable, Codable, Sendable {
 
     // MARK: - Properties
 
@@ -94,9 +94,9 @@ public struct Yo: Hashable, Codable, Sendable { // swiftlint:disable:this type_n
         details: String? = nil,
         title: String? = nil,
     ) -> Self {
-        let message = (error as? (any Yikes))?.summary ?? error.localizedDescription
-        let details = details ?? (error as? (any Yikes))?.details
-        let title = title ?? ((error as? (any Yikes))?.title)
+        let message = (error as? (any MotleyError))?.summary ?? error.localizedDescription
+        let details = details ?? (error as? (any MotleyError))?.details
+        let title = title ?? ((error as? (any MotleyError))?.title)
         return .init(summary: message, details: details, title: title, kind: .error)
     }
 

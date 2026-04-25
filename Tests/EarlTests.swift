@@ -529,7 +529,7 @@ struct EarlErrorTests {
 
     @Test("Conforms to Yikes")
     func conformsToYikes() {
-        let error: any Yikes = EarlError()
+        let error: any MotleyError = EarlError()
         #expect(error.summary == "Invalid URL.")
     }
 }
