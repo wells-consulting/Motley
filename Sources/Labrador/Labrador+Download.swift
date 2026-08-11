@@ -79,39 +79,85 @@ extension Labrador {
         case failed(any Error)
     }
 
+    public struct FileDownloadTransfer: Sendable {
+        public let events: AsyncStream<FileDownloadEvent>
+        public let cancelProducingResumeData: @Sendable () async -> Data?
+        public let cancel: @Sendable () -> Void
+    }
+
+    private final class FileDownloadTaskController: @unchecked Sendable {
+        private let lock = NSLock()
+        private var didCancel = false
+
+        private let downloadTask: URLSessionDownloadTask
+        private let sessionDelegate: LabradorSessionDelegate?
+
+        init(
+            downloadTask: URLSessionDownloadTask,
+            sessionDelegate: LabradorSessionDelegate?
+        ) {
+            self.downloadTask = downloadTask
+            self.sessionDelegate = sessionDelegate
+        }
+
+        func cancel() {
+            guard beginCancel() else { return }
+            sessionDelegate?.unregister(for: downloadTask.taskIdentifier)
+            downloadTask.cancel()
+        }
+
+        func cancelProducingResumeData() async -> Data? {
+            guard beginCancel() else { return nil }
+
+            sessionDelegate?.unregister(for: downloadTask.taskIdentifier)
+
+            return await withCheckedContinuation { continuation in
+                downloadTask.cancel { resumeData in
+                    continuation.resume(returning: resumeData)
+                }
+            }
+        }
+
+        private func beginCancel() -> Bool {
+            lock.lock()
+            defer { lock.unlock() }
+
+            guard !didCancel else { return false }
+            didCancel = true
+            return true
+        }
+    }
+
     /// Downloads a resource directly to disk via `URLSessionDownloadTask`.
     ///
-    /// Use this instead of ``download(_:headers:timeout:logContext:)`` for large files
-    /// (e.g. video) where buffering the entire response in memory is not acceptable.
+    /// Use this instead of ``downloadInMemory(_:headers:timeout:logContext:)``
+    /// for large files where buffering the entire response in memory is not
+    /// acceptable.
     ///
     /// The caller is responsible for moving `tempFileURL` to its final destination
     /// when handling the `.completed` event — the URL is stable across the event
     /// loop but will be cleaned up on the next system temp-directory sweep.
-    ///
-    /// To pause and resume a download, cancel the consuming `Task`. The
-    /// `.cancelled(resumeData:)` event carries opaque resume data (may be `nil`
-    /// for very short downloads) that can be passed back via `resumeData:` on the
-    /// next call.
     public func downloadToFile(
         _ request: URLRequest,
         resumeData: Data? = nil,
         timeout: TimeInterval? = nil,
         progressThrottleInterval: TimeInterval? = nil,
-        logContext: String? = nil,
-    ) -> AsyncStream<FileDownloadEvent> {
-
+        logContext: String? = nil
+    ) -> FileDownloadTransfer {
         let clientRequest = ClientRequest(
             urlRequest: request,
-            logContext: logContext,
+            logContext: logContext
         )
 
         log(clientRequest)
 
         let sessionDelegate = sessionDelegate
         let session = urlSession
-        let throttleInterval = progressThrottleInterval ?? 1.0
+        let throttleInterval = progressThrottleInterval ?? 0.5
 
-        return AsyncStream { continuation in
+        var controller: FileDownloadTaskController?
+
+        let events = AsyncStream<FileDownloadEvent> { continuation in
             let downloadTask: URLSessionDownloadTask
             if let resumeData {
                 downloadTask = session.downloadTask(withResumeData: resumeData)
@@ -119,23 +165,43 @@ extension Labrador {
                 downloadTask = session.downloadTask(with: request)
             }
 
-            sessionDelegate?.register(continuation, progressThrottleInterval: throttleInterval, for: downloadTask.taskIdentifier)
+            let taskController = FileDownloadTaskController(
+                downloadTask: downloadTask,
+                sessionDelegate: sessionDelegate
+            )
+
+            controller = taskController
+
+            sessionDelegate?.register(
+                continuation,
+                progressThrottleInterval: throttleInterval,
+                for: downloadTask.taskIdentifier
+            )
+
             downloadTask.resume()
 
-            continuation.onTermination = { [sessionDelegate, downloadTask, continuation] reason in
+            continuation.onTermination = { @Sendable reason in
                 switch reason {
                 case .cancelled:
-                    sessionDelegate?.unregister(for: downloadTask.taskIdentifier)
-                    downloadTask.cancel(byProducingResumeData: { data in
-                        continuation.yield(.cancelled(resumeData: data))
-                        continuation.finish()
-                    })
+                    taskController.cancel()
                 case .finished:
                     break
                 @unknown default:
-                    downloadTask.cancel()
+                    taskController.cancel()
                 }
             }
         }
+
+        let _controller = controller
+
+        return FileDownloadTransfer(
+            events: events,
+            cancelProducingResumeData: {
+                await _controller?.cancelProducingResumeData()
+            },
+            cancel: {
+                _controller?.cancel()
+            }
+        )
     }
 }
