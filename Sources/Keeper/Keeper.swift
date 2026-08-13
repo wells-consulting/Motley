@@ -32,6 +32,12 @@ public struct Keeper: Sendable {
 
     // MARK: - Operations
 
+    public func exists(key: String) -> Bool {
+        let query = baseQuery(for: key)
+        let status = SecItemCopyMatching(query as CFDictionary, nil)
+        return status == errSecSuccess
+    }
+
     public func load<T: Codable>(_ type: T.Type, forKey key: String) throws -> T {
 
         var query = baseQuery(for: key)
