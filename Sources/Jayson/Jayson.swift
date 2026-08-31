@@ -10,7 +10,7 @@ public struct Jayson: Sendable {
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
     private let stripNullEscapes: Bool
-    
+
     private let log = Timber(
         subsystem: Bundle.appName,
         category: #fileID,
@@ -76,7 +76,6 @@ public struct Jayson: Sendable {
     /// - Parameters:
     ///     - value: Value to encode.
     ///     - userInfo: Additional coding context passed to the encoder.
-    ///     - refcode: Optional reference code attached to any thrown error.
     ///
     /// - Returns: Raw encoded data.
     ///
@@ -84,7 +83,6 @@ public struct Jayson: Sendable {
     public func encode<T: Encodable>(
         _ value: T,
         userInfo: [CodingUserInfoKey: any Sendable]? = nil,
-        refcode: String? = nil,
     ) throws -> Data {
 
         var summary = ""
@@ -125,8 +123,8 @@ public struct Jayson: Sendable {
             process: .encode,
             summary: summary,
             underlyingError: underlyingError,
-            userInfo: errorUserInfo,
-            refcode: refcode)
+            userInfo: errorUserInfo
+        )
     }
 
     // MARK: - Decode
@@ -137,7 +135,6 @@ public struct Jayson: Sendable {
     ///     - type: The type to decode.
     ///     - data: Raw data, or `nil` which produces an error.
     ///     - userInfo: Additional coding context passed to the decoder.
-    ///     - refcode: Optional reference code attached to any thrown error.
     ///
     /// - Returns: The decoded value.
     ///
@@ -146,13 +143,12 @@ public struct Jayson: Sendable {
         _ type: T.Type,
         from data: Data?,
         userInfo: [CodingUserInfoKey: any Sendable]? = nil,
-        refcode: String? = nil,
     ) throws -> T {
 
         guard let data else {
             let message = "Failed to decode \(T.self): no data."
             log.error(message)
-            throw JaysonError(process: .decode, summary: message, refcode: refcode)
+            throw JaysonError(process: .decode, summary: message)
         }
 
         let decodableData: Data
@@ -217,7 +213,6 @@ public struct Jayson: Sendable {
             underlyingError: underlyingError,
             userInfo: errorUserInfo,
             data: decodableData,
-            refcode: refcode,
         )
     }
 
@@ -229,7 +224,6 @@ public struct Jayson: Sendable {
     ///     - type: The type to decode.
     ///     - string: A JSON string.
     ///     - userInfo: Additional coding context passed to the decoder.
-    ///     - refcode: Optional reference code attached to any thrown error.
     ///
     /// - Returns: The decoded value.
     ///
@@ -238,9 +232,8 @@ public struct Jayson: Sendable {
         _ type: T.Type,
         from string: String,
         userInfo: [CodingUserInfoKey: any Sendable]? = nil,
-        refcode: String? = nil,
     ) throws -> T {
-        try decode(type, from: string.data(using: .utf8), userInfo: userInfo, refcode: refcode)
+        try decode(type, from: string.data(using: .utf8), userInfo: userInfo)
     }
 
     // MARK: - Encode to String
@@ -250,7 +243,6 @@ public struct Jayson: Sendable {
     /// - Parameters:
     ///     - value: Value to encode.
     ///     - userInfo: Additional coding context passed to the encoder.
-    ///     - refcode: Optional reference code attached to any thrown error.
     ///
     /// - Returns: A JSON string representation of the value.
     ///
@@ -258,16 +250,14 @@ public struct Jayson: Sendable {
     public func string<T: Encodable>(
         from value: T,
         userInfo: [CodingUserInfoKey: any Sendable]? = nil,
-        refcode: String? = nil,
     ) throws -> String {
 
-        let data = try encode(value, userInfo: userInfo, refcode: refcode)
+        let data = try encode(value, userInfo: userInfo)
 
         guard let string = String(data: data, encoding: .utf8) else {
             throw JaysonError(
                 process: .encode,
                 summary: "Failed to encode \(T.self) to a UTF-8 string.",
-                refcode: refcode,
             )
         }
 
@@ -278,7 +268,7 @@ public struct Jayson: Sendable {
 
     /// Create JSON string from a value, returning `nil` on failure.
     ///
-    /// For a throwing variant, use ``string(from:userInfo:refcode:)``.
+    /// For a throwing variant, use ``string(from:userInfo:)``.
     ///
     /// - Parameters:
     ///     - value: Value to convert.

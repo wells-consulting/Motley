@@ -21,7 +21,6 @@ private struct FullError: MotleyError {
     let details: String?
     let underlyingError: (any Error)?
     let userInfo: [String: any Sendable]?
-    let refcode: String?
 }
 
 /// A plain (non-Motley) error for testing the non-Yikes path.
@@ -40,12 +39,6 @@ struct MotleyErrorDefaultsTests {
         #expect(error.summary == "Something broke")
     }
 
-    @Test("title defaults to nil")
-    func titleDefault() {
-        let error = MinimalError(summary: "x")
-        #expect(error.title == nil)
-    }
-
     @Test("details defaults to nil")
     func detailsDefault() {
         let error = MinimalError(summary: "x")
@@ -56,18 +49,6 @@ struct MotleyErrorDefaultsTests {
     func underlyingErrorDefault() {
         let error = MinimalError(summary: "x")
         #expect(error.underlyingError == nil)
-    }
-
-    @Test("userInfo defaults to nil")
-    func userInfoDefault() {
-        let error = MinimalError(summary: "x")
-        #expect(error.userInfo == nil)
-    }
-
-    @Test("refcode defaults to nil")
-    func refcodeDefault() {
-        let error = MinimalError(summary: "x")
-        #expect(error.refcode == nil)
     }
 }
 
@@ -182,10 +163,10 @@ struct MotleyErrorLocalizedTests {
             title: nil,
             details: "More info",
             underlyingError: nil,
-            userInfo: nil,
-            refcode: nil
+            userInfo: nil
         )
-        #expect(error.errorDescription == "Oops\nMore info")
+        #expect(error.errorDescription == "Oops")
+        #expect(error.failureReason == "More info")
     }
 
     @Test("localizedDescription uses errorDescription")
@@ -208,15 +189,13 @@ struct MotleyErrorFullConformerTests {
             title: "File Error",
             details: "Could not write to disk",
             underlyingError: underlying,
-            userInfo: ["path": "/tmp/file"],
-            refcode: "AB12"
+            userInfo: ["path": "/tmp/file"]
         )
         #expect(error.summary == "Save failed")
         #expect(error.title == "File Error")
         #expect(error.details == "Could not write to disk")
         #expect(error.underlyingError is PlainError)
         #expect(error.userInfo?["path"] as? String == "/tmp/file")
-        #expect(error.refcode == "AB12")
     }
 }
 
@@ -227,7 +206,7 @@ struct ErrorDescriptionOptionsTests {
 
     @Test("minimal is empty")
     func minimal() {
-        let opts = DoesNotCompute.Options.minimal
+        let opts = ErrorUtils.Options.minimal
         #expect(!opts.contains(.details))
         #expect(!opts.contains(.underlyingError))
         #expect(!opts.contains(.nsError))
@@ -235,7 +214,7 @@ struct ErrorDescriptionOptionsTests {
 
     @Test("basic includes details only")
     func basic() {
-        let opts = DoesNotCompute.Options.basic
+        let opts = ErrorUtils.Options.basic
         #expect(opts.contains(.details))
         #expect(!opts.contains(.underlyingError))
         #expect(!opts.contains(.nsError))
@@ -243,7 +222,7 @@ struct ErrorDescriptionOptionsTests {
 
     @Test("verbose includes details, underlyingError, and nsError")
     func verbose() {
-        let opts = DoesNotCompute.Options.verbose
+        let opts = ErrorUtils.Options.verbose
         #expect(opts.contains(.details))
         #expect(opts.contains(.underlyingError))
         #expect(opts.contains(.nsError))
@@ -258,7 +237,7 @@ struct DescribeRootTests {
     @Test("Root includes summary")
     func rootSummary() {
         let error = MinimalError(summary: "Request failed")
-        let result = DoesNotCompute.describe(error, options: .minimal)
+        let result = ErrorUtils.describe(error, options: .minimal)
         #expect(result.contains("Request failed"))
     }
 
@@ -269,10 +248,9 @@ struct DescribeRootTests {
             title: nil,
             details: "Timeout after 30s",
             underlyingError: nil,
-            userInfo: nil,
-            refcode: nil
+            userInfo: nil
         )
-        let result = DoesNotCompute.describe(error, options: .basic)
+        let result = ErrorUtils.describe(error, options: .basic)
         #expect(result.contains("Fail"))
         #expect(result.contains("Timeout after 30s"))
     }
@@ -284,24 +262,23 @@ struct DescribeRootTests {
             title: nil,
             details: "Secret details",
             underlyingError: nil,
-            userInfo: nil,
-            refcode: nil
+            userInfo: nil
         )
-        let result = DoesNotCompute.describe(error, options: .minimal)
+        let result = ErrorUtils.describe(error, options: .minimal)
         #expect(!result.contains("Secret details"))
     }
 
     @Test("Root plain Error includes its description")
     func rootPlainError() {
         let error = PlainError(description: "disk full")
-        let result = DoesNotCompute.describe(error, options: .minimal)
+        let result = ErrorUtils.describe(error, options: .minimal)
         #expect(result.contains("disk full"))
     }
 
     @Test("Root error with no underlying returns non-empty string")
     func rootNonEmpty() {
         let error = MinimalError(summary: "Some")
-        let result = DoesNotCompute.describe(error, options: .verbose)
+        let result = ErrorUtils.describe(error, options: .verbose)
         #expect(!result.isEmpty)
     }
 }
@@ -319,10 +296,9 @@ struct DescribeUnderlyingTests {
             title: nil,
             details: nil,
             underlyingError: inner,
-            userInfo: nil,
-            refcode: nil
+            userInfo: nil
         )
-        let result = DoesNotCompute.describe(outer, options: .verbose)
+        let result = ErrorUtils.describe(outer, options: .verbose)
         #expect(result.contains("Outer problem"))
         #expect(result.contains("Inner problem"))
         #expect(result.contains("Underlying Error"))
@@ -336,10 +312,9 @@ struct DescribeUnderlyingTests {
             title: nil,
             details: nil,
             underlyingError: inner,
-            userInfo: nil,
-            refcode: nil
+            userInfo: nil
         )
-        let result = DoesNotCompute.describe(outer, options: .verbose)
+        let result = ErrorUtils.describe(outer, options: .verbose)
         #expect(result.contains("High-level failure"))
         #expect(result.contains("low-level failure"))
     }
@@ -352,10 +327,9 @@ struct DescribeUnderlyingTests {
             title: nil,
             details: nil,
             underlyingError: inner,
-            userInfo: nil,
-            refcode: nil
+            userInfo: nil
         )
-        let result = DoesNotCompute.describe(outer, options: .minimal)
+        let result = ErrorUtils.describe(outer, options: .minimal)
         #expect(result.contains("Visible"))
         #expect(!result.contains("Hidden"))
     }
@@ -368,18 +342,16 @@ struct DescribeUnderlyingTests {
             title: nil,
             details: nil,
             underlyingError: innermost,
-            userInfo: nil,
-            refcode: nil
+            userInfo: nil
         )
         let outer = FullError(
             summary: "Top layer",
             title: nil,
             details: nil,
             underlyingError: middle,
-            userInfo: nil,
-            refcode: nil
+            userInfo: nil
         )
-        let result = DoesNotCompute.describe(outer, options: .verbose)
+        let result = ErrorUtils.describe(outer, options: .verbose)
         #expect(result.contains("Top layer"))
         #expect(result.contains("Middle layer"))
         #expect(result.contains("Root cause"))
@@ -393,10 +365,9 @@ struct DescribeUnderlyingTests {
             title: nil,
             details: nil,
             underlyingError: inner,
-            userInfo: nil,
-            refcode: nil
+            userInfo: nil
         )
-        let result = DoesNotCompute.describe(outer, options: .verbose)
+        let result = ErrorUtils.describe(outer, options: .verbose)
         #expect(result.contains("PlainError"))
     }
 }
@@ -409,7 +380,7 @@ struct DescribeNSErrorTests {
     @Test("NSError info included with .nsError option")
     func nsErrorIncluded() {
         let nsError = NSError(domain: "com.test", code: 42, userInfo: nil)
-        let result = DoesNotCompute.describe(nsError, options: .verbose)
+        let result = ErrorUtils.describe(nsError, options: .verbose)
         #expect(result.contains("Domain=com.test"))
         #expect(result.contains("Code=42"))
     }
@@ -417,7 +388,7 @@ struct DescribeNSErrorTests {
     @Test("NSError structured line excluded without .nsError option")
     func nsErrorExcluded() {
         let nsError = NSError(domain: "com.test", code: 42, userInfo: nil)
-        let result = DoesNotCompute.describe(nsError, options: .minimal)
+        let result = ErrorUtils.describe(nsError, options: .minimal)
         // The structured "Error Domain=..." line should not be present,
         // though NSError's own description may naturally contain domain info.
         #expect(!result.contains("Error Domain=com.test, Code=42"))
@@ -426,7 +397,7 @@ struct DescribeNSErrorTests {
     @Test("MotleyCore domain is skipped to avoid redundancy")
     func motleyCoreSkipped() {
         let error = MinimalError(summary: "Test")
-        let result = DoesNotCompute.describe(error, options: .verbose)
+        let result = ErrorUtils.describe(error, options: .verbose)
         #expect(!result.contains("Domain=MotleyCore"))
     }
 }
@@ -443,8 +414,7 @@ struct DiagnosticsTests {
             title: nil,
             details: "Detail text",
             underlyingError: nil,
-            userInfo: nil,
-            refcode: nil
+            userInfo: nil
         )
         let diag = error.diagnostics(options: .basic)
         #expect(diag?.contains("Failed") == true)
@@ -458,53 +428,10 @@ struct DiagnosticsTests {
             title: nil,
             details: "Not this",
             underlyingError: nil,
-            userInfo: nil,
-            refcode: nil
+            userInfo: nil
         )
         let diag = error.diagnostics(options: .minimal)
         #expect(diag?.contains("Just this") == true)
         #expect(diag?.contains("Not this") != true)
-    }
-}
-
-// MARK: - Refcode
-
-@Suite("Refcode.derive")
-struct RefcodeTests {
-
-    @Test("Plain filename produces Domain.method")
-    func plainFile() {
-        let result = Refcode.derive(fileID: "App/Labrador.swift", caller: "execute()")
-        #expect(result == "Labrador.execute")
-    }
-
-    @Test("Extension file strips base-class prefix")
-    func extensionFileStripsPrefix() {
-        let result = Refcode.derive(fileID: "SomeApp/Some+Scene.swift", caller: "fetchData()")
-        #expect(result == "Scene.fetchData")
-    }
-
-    @Test("Multiple plus signs: only suffix after last + is kept")
-    func multiplePlus() {
-        let result = Refcode.derive(fileID: "SomeApp/A+B+Scene.swift", caller: "load()")
-        #expect(result == "Scene.load")
-    }
-
-    @Test("No module prefix in fileID still works")
-    func noSlash() {
-        let result = Refcode.derive(fileID: "Labrador.swift", caller: "fetch()")
-        #expect(result == "Labrador.fetch")
-    }
-
-    @Test("Caller with no parens uses full string")
-    func callerNoParens() {
-        let result = Refcode.derive(fileID: "SomeApp/Foo.swift", caller: "doWork")
-        #expect(result == "Foo.doWork")
-    }
-
-    @Test("Extension file with no module prefix strips prefix")
-    func extensionFileNoModule() {
-        let result = Refcode.derive(fileID: "SomeViewModel+Settings.swift", caller: "save()")
-        #expect(result == "Settings.save")
     }
 }

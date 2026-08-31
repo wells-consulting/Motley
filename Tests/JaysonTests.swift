@@ -385,51 +385,6 @@ struct JaysonEncodeToStringTests {
     }
 }
 
-// MARK: - Refcode Tests
-
-struct JaysonRefcodeTests {
-
-    @Test("Encode - refcode is passed through to error")
-    func encodeRefcode() {
-        let coder = Jayson()
-        do {
-            _ = try coder.encode(Double.nan, refcode: "ENC-001")
-            Issue.record("Expected error")
-        } catch let error as JaysonError {
-            #expect(error.refcode == "ENC-001")
-        } catch {
-            Issue.record("Unexpected error type: \(error)")
-        }
-    }
-
-    @Test("Decode - refcode is passed through to error on nil data")
-    func decodeRefcodeNilData() {
-        let coder = Jayson()
-        do {
-            _ = try coder.decode(Person.self, from: Data?.none, refcode: "DEC-001")
-            Issue.record("Expected error")
-        } catch let error as JaysonError {
-            #expect(error.refcode == "DEC-001")
-        } catch {
-            Issue.record("Unexpected error type: \(error)")
-        }
-    }
-
-    @Test("Decode - refcode is passed through to error on invalid data")
-    func decodeRefcodeInvalidData() {
-        let coder = Jayson()
-        let data = "bad".data(using: .utf8)!
-        do {
-            _ = try coder.decode(Person.self, from: data, refcode: "DEC-002")
-            Issue.record("Expected error")
-        } catch let error as JaysonError {
-            #expect(error.refcode == "DEC-002")
-        } catch {
-            Issue.record("Unexpected error type: \(error)")
-        }
-    }
-}
-
 // MARK: - JaysonError Tests
 
 struct JaysonErrorTests {
@@ -475,18 +430,6 @@ struct JaysonErrorTests {
         #expect(wrapped?.process == .decode)
         #expect(wrapped?.summary == "The data could not be read.")
         #expect(wrapped?.details?.contains("Expected") == true)
-    }
-
-    @Test("JaysonError - title defaults to Encoding Error for encode")
-    func titleDefaultEncode() {
-        let error = JaysonError(process: .encode)
-        #expect(error.title == "Encoding Error")
-    }
-
-    @Test("JaysonError - title defaults to Decoding Error for decode")
-    func titleDefaultDecode() {
-        let error = JaysonError(process: .decode)
-        #expect(error.title == "Decoding Error")
     }
 
     @Test("JaysonError - summary defaults to Encoding failed for encode")

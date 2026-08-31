@@ -9,14 +9,9 @@ public struct EarlError: MotleyError {
 
     // MARK: - Properties
 
-    // MARK: Oops Conformance
-
-    public let refcode: String?
     public let summary: String
-    public let title: String?
     public let details: String?
     public let underlyingError: (any Error)?
-    public let userInfo: [String: any Sendable]?
 
     // MARK: EarlError specific
 
@@ -31,23 +26,16 @@ public struct EarlError: MotleyError {
 
     init(
         summary: String? = nil,
-        title: String? = nil,
         details: String? = nil,
         underlyingError: (any Error)? = nil,
-        userInfo: [String: any Sendable]? = nil,
         urlString: String? = nil,
         urlComponents: URLComponents? = nil,
-        refcode: String? = nil,
     ) {
 
-        self.title = title ?? "URL Error"
-
-        self.refcode = refcode
         self.summary = summary ?? "Invalid URL."
 
         self.details = details
         self.underlyingError = underlyingError
-        self.userInfo = userInfo
 
         self.urlString = urlString
         self.urlComponents = urlComponents

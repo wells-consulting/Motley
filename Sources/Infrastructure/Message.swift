@@ -35,7 +35,7 @@ public struct Message: Hashable, Codable, Sendable {
     /// - Returns:
     ///     Informational notice
     public static func info(
-        summary: String,
+        _ summary: String,
         details: String? = nil,
         title: String? = nil,
     ) -> Self {
@@ -52,7 +52,7 @@ public struct Message: Hashable, Codable, Sendable {
     /// - Returns:
     ///     Warning notice
     public static func warning(
-        summary: String,
+        _ summary: String,
         details: String? = nil,
         title: String? = nil,
     ) -> Self {
@@ -69,7 +69,7 @@ public struct Message: Hashable, Codable, Sendable {
     /// - Returns:
     ///     Error notice
     public static func error(
-        summary: String,
+        _ summary: String,
         details: String? = nil,
         title: String? = nil,
     ) -> Self {
@@ -94,10 +94,17 @@ public struct Message: Hashable, Codable, Sendable {
         details: String? = nil,
         title: String? = nil,
     ) -> Self {
-        let message = (error as? (any MotleyError))?.summary ?? error.localizedDescription
-        let details = details ?? (error as? (any MotleyError))?.details
-        let title = title ?? ((error as? (any MotleyError))?.title)
-        return .init(summary: message, details: details, title: title, kind: .error)
+
+        let summary =
+            (error as? (any MotleyError))?.summary
+            ?? error.localizedDescription
+
+        let details =
+            details
+            ?? (error as? (any MotleyError))?.details
+            ?? (error as? (any LocalizedError))?.failureReason
+
+        return .init(summary: summary, details: details, title: title, kind: .error)
     }
 
     /// Notice kind

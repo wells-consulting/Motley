@@ -67,7 +67,6 @@ public final class Earl {
     ///     - Initialized Earl
     public init(
         dateFormatter: DateFormatter? = nil,
-        refcode: String? = nil,
     ) {
         self.scheme = nil
         self.host = nil
@@ -97,7 +96,6 @@ public final class Earl {
     public init(
         _ string: String,
         dateFormatter: DateFormatter? = nil,
-        refcode: String? = nil,
     ) throws(EarlError) {
 
         guard let components = URLComponents(string: string) else {

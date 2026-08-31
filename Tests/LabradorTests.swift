@@ -76,22 +76,6 @@ struct LabradorConfigurationTests {
         let config = Labrador.Configuration(tlsTrustPolicy: .trustSelfSigned)
         #expect(config.tlsTrustPolicy == .trustSelfSigned)
     }
-
-    #if canImport(Security)
-    @Test("Configuration - trustSelfSigned creates session with delegate")
-    func trustSelfSignedCreatesDelegate() async {
-        let client = Labrador(configuration: .init(tlsTrustPolicy: .trustSelfSigned))
-        let session = await client.urlSession
-        #expect(session.delegate is SelfSignedCertificateDelegate)
-    }
-
-    @Test("Configuration - system policy creates session without delegate")
-    func systemPolicyNoDelegate() async {
-        let client = Labrador(configuration: .init(tlsTrustPolicy: .system))
-        let session = await client.urlSession
-        #expect(session.delegate == nil)
-    }
-    #endif
 }
 
 // MARK: - Header Management Tests

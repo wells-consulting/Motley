@@ -488,12 +488,6 @@ struct EarlErrorTests {
         #expect(error.summary == "Invalid URL.")
     }
 
-    @Test("Default title is 'URL Error'")
-    func defaultTitle() {
-        let error = EarlError()
-        #expect(error.title == "URL Error")
-    }
-
     @Test("missingScheme has user-friendly summary and technical details")
     func missingSchemeMessage() {
         let error = EarlError.missingScheme(urlString: "://host", urlComponents: nil)

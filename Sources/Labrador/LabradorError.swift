@@ -9,14 +9,9 @@ public struct LabradorError: MotleyError {
 
     // MARK: - Properties
 
-    // MARK: Yikes conformance
-
-    public let refcode: String?
     public let summary: String
-    public let title: String?
     public let details: String?
     public let underlyingError: (any Error)?
-    public let userInfo: [String: any Sendable]?
 
     // MARK: LabradorError specific
 
@@ -72,21 +67,15 @@ public struct LabradorError: MotleyError {
 
     init(
         summary: String,
-        title: String? = nil,
         details: String? = nil,
         underlyingError: (any Error)? = nil,
-        userInfo: [String: any Sendable]? = nil,
         urlRequest: URLRequest? = nil,
         httpURLResponse: HTTPURLResponse? = nil,
         responseData: Data? = nil,
         responseBody: String? = nil,
         timing: Range<Date>? = nil,
-        refcode: String? = nil,
     ) {
 
-        self.title = title ?? "HTTP Error"
-
-        self.refcode = refcode
         self.summary = summary
 
         let truncatedBody = responseBody.map { String($0.prefix(2000)) }
@@ -98,7 +87,6 @@ public struct LabradorError: MotleyError {
         }
 
         self.underlyingError = underlyingError
-        self.userInfo = userInfo
 
         self.urlRequest = urlRequest
         self.httpURLResponse = httpURLResponse
@@ -108,7 +96,6 @@ public struct LabradorError: MotleyError {
 
     init(
         summary: String,
-        title: String? = nil,
         details: String? = nil,
         underlyingError: (any Error)? = nil,
         userInfo: [String: any Sendable]? = nil,
@@ -117,11 +104,8 @@ public struct LabradorError: MotleyError {
         responseData: Data? = nil,
         responseBody: String? = nil,
         timing: Range<Date>? = nil,
-        refcode: String? = nil,
     ) {
 
-        self.refcode = refcode
-        self.title = title ?? "HTTP Error"
         self.summary = summary
 
         let truncatedBody = responseBody.map { String($0.prefix(2000)) }
@@ -133,7 +117,6 @@ public struct LabradorError: MotleyError {
         }
 
         self.underlyingError = underlyingError
-        self.userInfo = userInfo
 
         self.urlRequest = clientRequest.urlRequest
         self.httpURLResponse = httpURLResponse
@@ -143,7 +126,7 @@ public struct LabradorError: MotleyError {
 
     // MARK: Factory Methods
 
-    public static func noURL() -> any MotleyError {
+    public static func noURL() -> Self {
         LabradorError(
             summary: "Request has no URL.",
         )

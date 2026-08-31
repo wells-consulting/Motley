@@ -11,14 +11,9 @@ public struct KeeperError: MotleyError {
 
     // MARK: - Properties
 
-    // MARK: Oops conformance
-
-    public let refcode: String?
     public let summary: String
-    public let title: String?
     public let details: String?
     public let underlyingError: (any Error)?
-    public let userInfo: [String: any Sendable]?
 
     // MARK: KeychainError specific
 
@@ -31,19 +26,13 @@ public struct KeeperError: MotleyError {
 
     init(
         summary: String,
-        title: String? = nil,
         details: String? = nil,
         underlyingError: (any Error)? = nil,
-        userInfo: [String: any Sendable]? = nil,
         status: OSStatus? = nil,
-        refcode: String? = nil,
     ) {
-        self.refcode = refcode
         self.summary = summary
-        self.title = title ?? "Keychain Error"
         self.details = details
         self.underlyingError = underlyingError
-        self.userInfo = userInfo
         self.status = status
     }
 
@@ -54,7 +43,6 @@ public struct KeeperError: MotleyError {
             summary: "Item not found.",
             details: "Key: \(key).",
             status: errSecItemNotFound,
-            refcode: "AXF9",
         )
     }
 
@@ -63,7 +51,6 @@ public struct KeeperError: MotleyError {
             summary: "Unable to save to the keychain.",
             details: "Key: \(key), OSStatus: \(status).",
             status: status,
-            refcode: "4FJC",
         )
     }
 
@@ -72,7 +59,6 @@ public struct KeeperError: MotleyError {
             summary: "Unable to load from the keychain.",
             details: "Key: \(key), OSStatus: \(status).",
             status: status,
-            refcode: "4T85",
         )
     }
 
@@ -81,7 +67,6 @@ public struct KeeperError: MotleyError {
             summary: "Unable to delete from the keychain.",
             details: "Key: \(key), OSStatus: \(status).",
             status: status,
-            refcode: "9UUD",
         )
     }
 
@@ -90,7 +75,6 @@ public struct KeeperError: MotleyError {
             summary: "Unable to save to the keychain.",
             details: "Key: \(key). Encoding failed.",
             underlyingError: underlyingError,
-            refcode: "WWKF",
         )
     }
 
@@ -99,7 +83,6 @@ public struct KeeperError: MotleyError {
             summary: "Unable to load from the keychain.",
             details: "Key: \(key). Decoding failed.",
             underlyingError: underlyingError,
-            refcode: "WWKF",
         )
     }
 }

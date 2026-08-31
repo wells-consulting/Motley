@@ -14,11 +14,7 @@ public struct JaysonError: MotleyError {
 
     // MARK: - Properties
 
-    // MARK: Yikes conformance
-
-    public let refcode: String?
     public let summary: String
-    public let title: String?
     public let details: String?
     public let underlyingError: (any Error)?
     public let userInfo: [String: any Sendable]?
@@ -35,15 +31,11 @@ public struct JaysonError: MotleyError {
     public init(
         process: Process,
         summary: String? = nil,
-        title: String? = nil,
         details: String? = nil,
         underlyingError: (any Error)? = nil,
         userInfo: [String: any Sendable]? = nil,
         data: Data? = nil,
-        refcode: String? = nil,
     ) {
-
-        self.title = title ?? (process == .encode ? "Encoding Error" : "Decoding Error")
 
         self.summary = summary ?? (process == .encode ? "Encoding failed." : "Decoding failed.")
         self.details = details
@@ -58,11 +50,9 @@ public struct JaysonError: MotleyError {
             } else {
                 nil
             }
-
-        self.refcode = refcode
     }
 
-    public static func wrap(_ error: DecodingError, refcode: String? = nil) -> JaysonError? {
+    public static func wrap(_ error: DecodingError) -> JaysonError? {
 
         let details: String
 
@@ -90,7 +80,6 @@ public struct JaysonError: MotleyError {
             summary: "The data could not be read.",
             details: details,
             underlyingError: underlyingError,
-            refcode: refcode,
         )
     }
 }

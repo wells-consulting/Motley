@@ -14,20 +14,17 @@ import Testing
 @Suite("KeychainError")
 struct KeychainErrorTests {
 
-    @Test("itemNotFound has correct refcode and summary")
+    @Test("itemNotFound has correct summary")
     func itemNotFound() {
         let error = KeeperError.itemNotFound(key: "myKey")
-        #expect(error.refcode == "AXF9")
         #expect(error.summary == "Item not found.")
         #expect(error.details?.contains("myKey") == true)
         #expect(error.status == errSecItemNotFound)
-        #expect(error.title == "Keychain Error")
     }
 
     @Test("saveFailed includes key and OSStatus in details")
     func saveFailed() {
         let error = KeeperError.saveFailed(key: "token", status: -25299)
-        #expect(error.refcode == "4FJC")
         #expect(error.details?.contains("token") == true)
         #expect(error.details?.contains("-25299") == true)
         #expect(error.status == -25299)
@@ -36,7 +33,6 @@ struct KeychainErrorTests {
     @Test("loadFailed includes key and OSStatus in details")
     func loadFailed() {
         let error = KeeperError.loadFailed(key: "secret", status: -25300)
-        #expect(error.refcode == "4T85")
         #expect(error.details?.contains("secret") == true)
         #expect(error.details?.contains("-25300") == true)
         #expect(error.status == -25300)
@@ -45,7 +41,6 @@ struct KeychainErrorTests {
     @Test("deleteFailed includes key and OSStatus in details")
     func deleteFailed() {
         let error = KeeperError.deleteFailed(key: "old", status: -25244)
-        #expect(error.refcode == "9UUD")
         #expect(error.details?.contains("old") == true)
         #expect(error.details?.contains("-25244") == true)
         #expect(error.status == -25244)
@@ -55,7 +50,6 @@ struct KeychainErrorTests {
     func encodingFailed() {
         struct TestError: Error {}
         let error = KeeperError.encodingFailed(key: "data", underlyingError: TestError())
-        #expect(error.refcode == "WWKF")
         #expect(error.underlyingError is TestError)
         #expect(error.details?.contains("data") == true)
     }
@@ -64,7 +58,6 @@ struct KeychainErrorTests {
     func decodingFailed() {
         struct TestError: Error {}
         let error = KeeperError.decodingFailed(key: "data", underlyingError: TestError())
-        #expect(error.refcode == "WWKF")
         #expect(error.underlyingError is TestError)
         #expect(error.details?.contains("data") == true)
     }
@@ -73,7 +66,6 @@ struct KeychainErrorTests {
     func YikesConformance() {
         let error: any MotleyError = KeeperError.itemNotFound(key: "test")
         #expect(error.details?.contains("test") == true)
-        #expect(error.title == "Keychain Error")
     }
 }
 
