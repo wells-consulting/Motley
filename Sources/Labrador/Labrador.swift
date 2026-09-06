@@ -1,13 +1,9 @@
 //
+// Motley – Michael's Swift Toolkit
 // Copyright 2025-2026 Wells Consulting.
-// This file is part of Motley and is released under the MIT License.
 //
 
 import Foundation
-
-#if canImport(FoundationNetworking)
-    import FoundationNetworking
-#endif
 
 /// An async HTTP client built on `URLSession`.
 ///
@@ -88,11 +84,7 @@ public actor Labrador {
             additionalHeaders["Authorization"] = "Bearer \(accessToken)"
         }
 
-        self.timber = Timber(
-            subsystem: Bundle.appName,
-            category: #fileID,
-            options: [.omitSourceLocation]
-        )
+        self.timber = Timber(formatting: [.omitSourceLocation])
     }
 
     // MARK: - Dispatch
@@ -118,43 +110,47 @@ public actor Labrador {
 
         let session = urlSession
 
-        let networkCall: @Sendable (URLRequest) async throws -> (Data, HTTPURLResponse) = { request in
-            let data: Data
-            let urlResponse: URLResponse
+        let networkCall:
+            @Sendable (URLRequest) async throws -> (
+                Data, HTTPURLResponse
+            ) = { request in
 
-            do {
-                let (_data, _urlResponse) = try await session.data(for: request)
-                data = _data
-                urlResponse = _urlResponse
-            } catch is CancellationError {
-                throw CancellationError()
-            } catch let urlError as Foundation.URLError where urlError.code == .cancelled {
-                throw CancellationError()
-            } catch let urlError as Foundation.URLError {
-                throw LabradorError(
-                    summary: Self.summary(for: urlError),
-                    underlyingError: urlError,
-                    clientRequest: clientRequest,
-                )
-            } catch {
-                throw LabradorError(
-                    summary: "Something went wrong.",
-                    underlyingError: error,
-                    clientRequest: clientRequest,
-                )
+                let data: Data
+                let urlResponse: URLResponse
+
+                do {
+                    let (_data, _urlResponse) = try await session.data(for: request)
+                    data = _data
+                    urlResponse = _urlResponse
+                } catch is CancellationError {
+                    throw CancellationError()
+                } catch let urlError as Foundation.URLError where urlError.code == .cancelled {
+                    throw CancellationError()
+                } catch let urlError as Foundation.URLError {
+                    throw LabradorError(
+                        summary: Self.summary(for: urlError),
+                        underlyingError: urlError,
+                        clientRequest: clientRequest,
+                    )
+                } catch {
+                    throw LabradorError(
+                        summary: "Something went wrong.",
+                        underlyingError: error,
+                        clientRequest: clientRequest,
+                    )
+                }
+
+                guard let httpURLResponse = urlResponse as? HTTPURLResponse else {
+                    throw LabradorError(
+                        summary: "Unable to reach the server.",
+                        details: "Received a non-HTTP response.",
+                        clientRequest: clientRequest,
+                        responseData: data,
+                    )
+                }
+
+                return (data, httpURLResponse)
             }
-
-            guard let httpURLResponse = urlResponse as? HTTPURLResponse else {
-                throw LabradorError(
-                    summary: "Unable to reach the server.",
-                    details: "Received a non-HTTP response.",
-                    clientRequest: clientRequest,
-                    responseData: data,
-                )
-            }
-
-            return (data, httpURLResponse)
-        }
 
         // Fold interceptors in reverse so that the first interceptor in the
         // array is the outermost (called first for requests, last for responses).
@@ -181,14 +177,16 @@ public actor Labrador {
         var data: Data?
         var httpURLResponse: HTTPURLResponse?
 
-        for attempt in 0 ..< maxAttempts {
+        for attempt in 0..<maxAttempts {
 
             try Task.checkCancellation()
 
             // Wait before retrying (not on the first attempt)
             if attempt > 0, let effectiveRetryPolicy {
                 let delay = effectiveRetryPolicy.backoff.delay(for: attempt - 1)
-                timber.notice("Retrying request (attempt \(attempt + 1) of \(maxAttempts)) after \(String(format: "%.0f", delay))s delay: \(urlRequest.url?.absoluteString ?? "unknown")")
+                timber.notice(
+                    "Retrying request (attempt \(attempt + 1) of \(maxAttempts)) after \(String(format: "%.0f", delay))s delay: \(urlRequest.url?.absoluteString ?? "unknown")"
+                )
                 try await Task.sleep(for: .seconds(delay))
                 try Task.checkCancellation()
             }
@@ -198,13 +196,14 @@ public actor Labrador {
 
                 // Check if the status code is retryable
                 if let effectiveRetryPolicy, attempt < maxAttempts - 1,
-                   effectiveRetryPolicy.retryCodes.contains(response.statusCode)
+                    effectiveRetryPolicy.retryCodes.contains(response.statusCode)
                 {
                     data = responseData
                     httpURLResponse = response
                     lastError = LabradorError(
                         summary: "The server is temporarily unavailable.",
-                        details: "\(response.statusCode) \(HTTPURLResponse.localizedString(forStatusCode: response.statusCode)).",
+                        details:
+                            "\(response.statusCode) \(HTTPURLResponse.localizedString(forStatusCode: response.statusCode)).",
                         clientRequest: clientRequest,
                         httpURLResponse: response,
                         responseData: responseData,
@@ -223,7 +222,9 @@ public actor Labrador {
 
                 // Check if the underlying URLError is retryable
                 let isRetryable: Bool = {
-                    guard let urlError = error.underlyingError as? Foundation.URLError else { return false }
+                    guard let urlError = error.underlyingError as? Foundation.URLError else {
+                        return false
+                    }
                     return effectiveRetryPolicy?.retryURLErrors.contains(urlError.code) == true
                 }()
 
@@ -239,11 +240,12 @@ public actor Labrador {
         }
 
         guard let data, let httpURLResponse else {
-            throw lastError ?? LabradorError(
-                summary: "Unable to reach the server.",
-                details: "Request failed after \(maxAttempts) attempts.",
-                clientRequest: clientRequest,
-            )
+            throw lastError
+                ?? LabradorError(
+                    summary: "Unable to reach the server.",
+                    details: "Request failed after \(maxAttempts) attempts.",
+                    clientRequest: clientRequest,
+                )
         }
 
         // If we exhausted retries on a retryable status code, fall through
@@ -265,7 +267,8 @@ public actor Labrador {
         guard let statusCode = StatusCode(rawValue: httpURLResponse.statusCode) else {
             throw LabradorError(
                 summary: "The server returned an unexpected response.",
-                details: "\(httpURLResponse.statusCode) \(HTTPURLResponse.localizedString(forStatusCode: httpURLResponse.statusCode)).",
+                details:
+                    "\(httpURLResponse.statusCode) \(HTTPURLResponse.localizedString(forStatusCode: httpURLResponse.statusCode)).",
                 clientRequest: clientRequest,
                 httpURLResponse: httpURLResponse,
                 responseData: data,
@@ -326,7 +329,7 @@ public actor Labrador {
         case .secureConnectionFailed:
             "Secure connection failed."
         case .serverCertificateUntrusted, .serverCertificateHasBadDate,
-             .serverCertificateNotYetValid, .serverCertificateHasUnknownRoot:
+            .serverCertificateNotYetValid, .serverCertificateHasUnknownRoot:
             "Server certificate is not trusted."
         case .dataNotAllowed:
             "Cellular data is disabled."
@@ -504,7 +507,8 @@ extension Labrador {
                 // Structured format: context leads, HTTP details follow
                 var requestSummary = "#\(id) \(logContext)"
                 if let data = payload?.data {
-                    requestSummary += " | \(method.rawValue) \(data.count.formatted(.byteCount(style: .memory)))"
+                    requestSummary +=
+                        " | \(method.rawValue) \(data.count.formatted(.byteCount(style: .memory)))"
                 }
                 self.requestSummary = requestSummary
             } else {
@@ -625,12 +629,12 @@ extension Labrador {
             var responseDescription: String?
 
             #if DEBUG
-            if forceIncludeResponseBody || includeResponseBody, let data, !data.isEmpty {
-                parts.append(data.count.formatted(.byteCount(style: .memory)))
-                if let text = String(data: data, encoding: .utf8) {
-                    responseDescription = "\n----\n" + text + "\n-----"
+                if forceIncludeResponseBody || includeResponseBody, let data, !data.isEmpty {
+                    parts.append(data.count.formatted(.byteCount(style: .memory)))
+                    if let text = String(data: data, encoding: .utf8) {
+                        responseDescription = "\n----\n" + text + "\n-----"
+                    }
                 }
-            }
             #endif
 
             var description = parts.joined(separator: ", ")
@@ -693,7 +697,8 @@ extension Labrador {
                     data: data,
                     contentType: .binary,
                     typeName: "\(Data.self)",
-                    summary: data.count.formatted(.byteCount(style: .memory)))
+                    summary: data.count.formatted(.byteCount(style: .memory))
+                )
             } else {
                 nil
             }
@@ -728,7 +733,8 @@ extension Labrador {
             data: data,
             contentType: .json,
             typeName: "\(Input.self)",
-            summary: ((input as? (any SummaryProviding))?.summary) ?? data.summary)
+            summary: ((input as? (any SummaryProviding))?.summary) ?? data.summary
+        )
 
         let clientRequest = ClientRequest(
             url: url,
@@ -840,7 +846,7 @@ extension Labrador {
     fileprivate final class RequestCounter {
 
         private var value: Int = 0
-        private let queue = DispatchQueue(label: "MotleyCore.Labrador.RequestCounter")
+        private let queue = DispatchQueue(label: "Motley.Labrador.RequestCounter")
 
         func increment() -> Int {
             queue.sync {
@@ -874,8 +880,7 @@ extension Labrador {
     func log(_ request: ClientRequest, file: String = #fileID, line: UInt = #line) -> LogOptions {
         let logOptions = request.logOptions ?? logOptions
         if logOptions.contains(.request) {
-            if
-                logOptions.contains(.requestBody),
+            if logOptions.contains(.requestBody),
                 let summary = request.payloadSummary
             {
                 timber.debug("\(request.requestSummary): \(summary)", file: file, line: line)

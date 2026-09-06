@@ -1,6 +1,6 @@
 //
+// Motley – Michael's Swift Toolkit
 // Copyright 2025-2026 Wells Consulting.
-// This file is part of Motley and is released under the MIT License.
 //
 
 import Foundation
@@ -52,8 +52,10 @@ public final class Earl {
 
         if !queryItems.isEmpty {
             absoluteString.append("?")
-            absoluteString.append(queryItems
-                .map { "\($0.name)=\($0.value ?? "null")" }.joined(separator: "&"))
+            absoluteString.append(
+                queryItems
+                    .map { "\($0.name)=\($0.value ?? "null")" }.joined(separator: "&")
+            )
         }
 
         return absoluteString

@@ -1,6 +1,6 @@
 //
+// Motley – Michael's Swift Toolkit
 // Copyright 2025-2026 Wells Consulting.
-// This file is part of Motley and is released under the MIT License.
 //
 
 import Foundation
@@ -37,7 +37,8 @@ public struct CaseyError: MotleyError {
 
         .init(
             summary: "Failed to save file.",
-            details: "\(data.count.formatted(.byteCount(style: .file))) to \"\(url.lastPathComponent)\".",
+            details:
+                "\(data.count.formatted(.byteCount(style: .file))) to \"\(url.lastPathComponent)\".",
             underlyingError: error,
         )
     }

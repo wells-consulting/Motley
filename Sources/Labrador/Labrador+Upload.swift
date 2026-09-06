@@ -1,13 +1,9 @@
 //
+// Motley – Michael's Swift Toolkit
 // Copyright 2025-2026 Wells Consulting.
-// This file is part of Motley and is released under the MIT License.
 //
 
 import Foundation
-
-#if canImport(FoundationNetworking)
-    import FoundationNetworking
-#endif
 
 // MARK: - Upload
 
@@ -40,7 +36,8 @@ public extension Labrador {
                     contentType: contentType,
                     typeName: nil,
                     summary: summary
-                )),
+                )
+            ),
             headers: headers,
             timeout: timeout,
             logContext: logContext
@@ -133,7 +130,8 @@ private final class UploadProgressDelegate: NSObject, URLSessionTaskDelegate, Se
         totalBytesSent: Int64,
         totalBytesExpectedToSend: Int64,
     ) {
-        let total: Int64? = totalBytesExpectedToSend != NSURLSessionTransferSizeUnknown
+        let total: Int64? =
+            totalBytesExpectedToSend != NSURLSessionTransferSizeUnknown
             ? totalBytesExpectedToSend
             : nil
 

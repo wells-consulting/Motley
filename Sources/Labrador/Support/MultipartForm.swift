@@ -1,6 +1,6 @@
 //
+// Motley – Michael's Swift Toolkit
 // Copyright 2025-2026 Wells Consulting.
-// This file is part of Motley and is released under the MIT License.
 //
 
 import Foundation
@@ -128,8 +128,8 @@ public final class MultipartForm {
         var summary: String {
             let dataByteCount = data.count.formatted(.byteCount(style: .memory))
             return """
-                { "name": "\(name)", "data":"\(dataByteCount)" }
-            """
+                    { "name": "\(name)", "data":"\(dataByteCount)" }
+                """
         }
 
         init(value: Data, name: String) throws {
@@ -153,8 +153,8 @@ public final class MultipartForm {
         var summary: String {
             let dataByteCount = data.count.formatted(.byteCount(style: .memory))
             return """
-                { "name": "\(name)", "filename": "\(filename)", "data":"\(dataByteCount)" }
-            """
+                    { "name": "\(name)", "filename": "\(filename)", "data":"\(dataByteCount)" }
+                """
         }
 
         init(value: Data, name: String, filename: String) {
@@ -164,7 +164,12 @@ public final class MultipartForm {
         }
 
         func encode(into data: NSMutableData) {
-            data.append(Data("Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(filename)\"\r\n".utf8))
+            data.append(
+                Data(
+                    "Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(filename)\"\r\n"
+                        .utf8
+                )
+            )
             data.append(Data("Content-Type: application/octet-stream\r\n\r\n".utf8))
             data.append(self.data)
         }

@@ -1,13 +1,9 @@
 //
+// Motley – Michael's Swift Toolkit
 // Copyright 2025-2026 Wells Consulting.
-// This file is part of Motley and is released under the MIT License.
 //
 
 import Foundation
-
-#if canImport(FoundationNetworking)
-    import FoundationNetworking
-#endif
 
 // MARK: - Download
 
@@ -52,7 +48,9 @@ extension Labrador {
 
                     let bytesReceived = Int64(data.count)
 
-                    continuation.yield(.progress(bytesReceived: bytesReceived, totalBytes: totalBytes))
+                    continuation.yield(
+                        .progress(bytesReceived: bytesReceived, totalBytes: totalBytes)
+                    )
                     continuation.yield(.completed(data))
 
                 } catch is CancellationError {

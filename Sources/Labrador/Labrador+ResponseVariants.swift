@@ -1,13 +1,9 @@
 //
+// Motley – Michael's Swift Toolkit
 // Copyright 2025-2026 Wells Consulting.
-// This file is part of Motley and is released under the MIT License.
 //
 
 import Foundation
-
-#if canImport(FoundationNetworking)
-    import FoundationNetworking
-#endif
 
 // MARK: - Response Variants
 
@@ -38,7 +34,11 @@ public extension Labrador {
             logContext: logContext,
         )
 
-        return try await requestWithResponse(clientRequest, outputType: outputType, userInfo: userInfo)
+        return try await requestWithResponse(
+            clientRequest,
+            outputType: outputType,
+            userInfo: userInfo
+        )
     }
 
     func postWithResponse<Output: Decodable>(
@@ -72,7 +72,11 @@ public extension Labrador {
             logContext: logContext,
         )
 
-        return try await requestWithResponse(clientRequest, outputType: outputType, userInfo: userInfo)
+        return try await requestWithResponse(
+            clientRequest,
+            outputType: outputType,
+            userInfo: userInfo
+        )
     }
 
     func putWithResponse<Output: Decodable>(
@@ -106,7 +110,11 @@ public extension Labrador {
             logContext: logContext,
         )
 
-        return try await requestWithResponse(clientRequest, outputType: outputType, userInfo: userInfo)
+        return try await requestWithResponse(
+            clientRequest,
+            outputType: outputType,
+            userInfo: userInfo
+        )
     }
 
     func patchWithResponse<Output: Decodable>(
@@ -140,7 +148,11 @@ public extension Labrador {
             logContext: logContext,
         )
 
-        return try await requestWithResponse(clientRequest, outputType: outputType, userInfo: userInfo)
+        return try await requestWithResponse(
+            clientRequest,
+            outputType: outputType,
+            userInfo: userInfo
+        )
     }
 
     func deleteWithResponse<Output: Decodable>(
@@ -174,7 +186,11 @@ public extension Labrador {
             logContext: logContext,
         )
 
-        return try await requestWithResponse(clientRequest, outputType: outputType, userInfo: userInfo)
+        return try await requestWithResponse(
+            clientRequest,
+            outputType: outputType,
+            userInfo: userInfo
+        )
     }
 
     // MARK: - Data Response Variants

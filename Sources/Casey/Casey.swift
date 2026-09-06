@@ -1,6 +1,6 @@
 //
+// Motley – Michael's Swift Toolkit
 // Copyright 2025-2026 Wells Consulting.
-// This file is part of Motley and is released under the MIT License.
 //
 
 import Foundation
@@ -42,36 +42,34 @@ public final class Casey {
         rows.joined(separator: "\n")
     }
 
-    #if canImport(Darwin)
-        /// Saves the document (header + rows) to the user's Downloads folder.
-        /// - Parameter filename: The filename including extension (e.g. `"export.csv"`).
-        /// - Throws: ``CaseyError`` if the Downloads directory cannot be located or the write fails.
-        public func saveToDownloadsFolder(
-            filename: String,
-        ) throws(CaseyError) {
+    /// Saves the document (header + rows) to the user's Downloads folder.
+    /// - Parameter filename: The filename including extension (e.g. `"export.csv"`).
+    /// - Throws: ``CaseyError`` if the Downloads directory cannot be located or the write fails.
+    public func saveToDownloadsFolder(
+        filename: String,
+    ) throws(CaseyError) {
 
-            rows.insert(headerRow, at: 0)
+        rows.insert(headerRow, at: 0)
 
-            let data = Data(text.utf8)
+        let data = Data(text.utf8)
 
-            do {
-                let url = try FileManager.default.url(
-                    for: .downloadsDirectory,
-                    in: .userDomainMask,
-                    appropriateFor: nil,
-                    create: true,
-                ).appendingPathComponent(filename)
+        do {
+            let url = try FileManager.default.url(
+                for: .downloadsDirectory,
+                in: .userDomainMask,
+                appropriateFor: nil,
+                create: true,
+            ).appendingPathComponent(filename)
 
-                try data.write(to: url, options: [.atomic, .completeFileProtection])
-            } catch {
-                throw .saveToDownloadsFolder(
-                    filename: filename,
-                    data: data,
-                    error: error,
-                )
-            }
+            try data.write(to: url, options: [.atomic, .completeFileProtection])
+        } catch {
+            throw .saveToDownloadsFolder(
+                filename: filename,
+                data: data,
+                error: error,
+            )
         }
-    #endif
+    }
 
     /// Saves the document (header + rows) to an arbitrary URL.
     /// - Parameter url: The destination file URL.
@@ -83,11 +81,7 @@ public final class Casey {
         let data = Data(text.utf8)
 
         do {
-            #if canImport(Darwin)
-                try data.write(to: url, options: [.atomic, .completeFileProtection])
-            #else
-                try data.write(to: url, options: [.atomic])
-            #endif
+            try data.write(to: url, options: [.atomic, .completeFileProtection])
         } catch {
             throw .saveTo(url, data: data, error: error)
         }

@@ -1,6 +1,6 @@
 //
+// Motley – Michael's Swift Toolkit
 // Copyright 2025-2026 Wells Consulting.
-// This file is part of Motley and is released under the MIT License.
 //
 
 import Foundation
@@ -519,12 +519,6 @@ struct EarlErrorTests {
         let components = URLComponents(string: "https://example.com")
         let error = EarlError.missingScheme(urlString: "test", urlComponents: components)
         #expect(error.urlComponents?.host == "example.com")
-    }
-
-    @Test("Conforms to Yikes")
-    func conformsToYikes() {
-        let error: any MotleyError = EarlError()
-        #expect(error.summary == "Invalid URL.")
     }
 }
 

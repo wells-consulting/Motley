@@ -1,6 +1,6 @@
 //
+// Motley – Michael's Swift Toolkit
 // Copyright 2025-2026 Wells Consulting.
-// This file is part of Motley and is released under the MIT License.
 //
 
 import Foundation
@@ -12,13 +12,10 @@ public struct EarlError: MotleyError {
     public let summary: String
     public let details: String?
     public let underlyingError: (any Error)?
-
-    // MARK: EarlError specific
+    public var errorKind: ErrorKind { .configuration }
 
     public let urlString: String?
     public let urlComponents: URLComponents?
-
-    public var kind: ErrorKind { .configuration }
 
     // MARK: - Lifecycle
 

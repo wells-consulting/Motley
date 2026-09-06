@@ -1,6 +1,6 @@
 //
+// Motley – Michael's Swift Toolkit
 // Copyright 2025-2026 Wells Consulting.
-// This file is part of Motley and is released under the MIT License.
 //
 
 import Foundation
@@ -33,36 +33,50 @@ public struct OAuthToken: Codable, CustomStringConvertible, Sendable {
         if let createdAt, let expiresAt = expiration {
             if expiresAt < .now {
                 let durationDescription = Date.durationString(from: expiresAt, to: .now)
-                let text = "Created on \(createdAt.formatted(date: .abbreviated, time: .shortened)), expired on \(expiresAt.formatted(date: .abbreviated, time: .shortened)) (\(durationDescription))"
+                let text =
+                    "Created on \(createdAt.formatted(date: .abbreviated, time: .shortened)), expired on \(expiresAt.formatted(date: .abbreviated, time: .shortened)) (\(durationDescription))"
                 return text
             } else {
                 let durationDescription = Date.durationString(from: .now, to: expiresAt)
-                let text = "Created on \(createdAt.formatted(date: .abbreviated, time: .shortened)), expires on \(expiresAt.formatted(date: .abbreviated, time: .shortened)) (\(durationDescription))"
+                let text =
+                    "Created on \(createdAt.formatted(date: .abbreviated, time: .shortened)), expires on \(expiresAt.formatted(date: .abbreviated, time: .shortened)) (\(durationDescription))"
                 return text
             }
         } else if isExpired {
             if let expiration {
-                return "Authorization token expired at \(expiration.formatted(date: .abbreviated, time: .shortened))"
+                return
+                    "Authorization token expired at \(expiration.formatted(date: .abbreviated, time: .shortened))"
             } else {
                 return "Authorization token expired."
             }
         } else {
             if let expiration {
-                return "Authorization token valid until \(expiration.formatted(date: .abbreviated, time: .shortened))"
+                return
+                    "Authorization token valid until \(expiration.formatted(date: .abbreviated, time: .shortened))"
             } else {
                 return "Authorization token valid."
             }
         }
     }
 
-    public init(accessToken: String?, idToken: String? = nil, refreshToken: String? = nil, expiration: Date? = nil) {
+    public init(
+        accessToken: String?,
+        idToken: String? = nil,
+        refreshToken: String? = nil,
+        expiration: Date? = nil
+    ) {
         self.accessToken = accessToken
         self.idToken = idToken
         self.refreshToken = refreshToken
         self.expiresIn = expiration?.timeIntervalSince1970
     }
 
-    public init(accessToken: String?, idToken: String? = nil, refreshToken: String? = nil, expiration: TimeInterval? = nil) {
+    public init(
+        accessToken: String?,
+        idToken: String? = nil,
+        refreshToken: String? = nil,
+        expiration: TimeInterval? = nil
+    ) {
         self.accessToken = accessToken
         self.idToken = idToken
         self.refreshToken = refreshToken

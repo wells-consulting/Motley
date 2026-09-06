@@ -1,13 +1,9 @@
 //
+// Motley – Michael's Swift Toolkit
 // Copyright 2025-2026 Wells Consulting.
-// This file is part of Motley and is released under the MIT License.
 //
 
 import Foundation
-
-#if canImport(FoundationNetworking)
-    import FoundationNetworking
-#endif
 
 final class LabradorSessionDelegate: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
 
@@ -56,7 +52,6 @@ final class LabradorSessionDelegate: NSObject, URLSessionDownloadDelegate, @unch
 
     // MARK: - URLSessionDelegate (TLS)
 
-    #if canImport(Security)
     func urlSession(
         _ session: URLSession,
         didReceive challenge: URLAuthenticationChallenge,
@@ -84,7 +79,6 @@ final class LabradorSessionDelegate: NSObject, URLSessionDownloadDelegate, @unch
         }
         return (.useCredential, URLCredential(trust: serverTrust))
     }
-    #endif
 
     // MARK: - URLSessionDownloadDelegate
 
@@ -117,7 +111,9 @@ final class LabradorSessionDelegate: NSObject, URLSessionDownloadDelegate, @unch
 
         let speed: Double? = elapsed > 0 ? Double(totalBytesWritten - lastBytes) / elapsed : nil
         let totalBytes: Int64? = totalBytesExpectedToWrite > 0 ? totalBytesExpectedToWrite : nil
-        continuation.yield(.progress(bytesWritten: totalBytesWritten, totalBytes: totalBytes, speed: speed))
+        continuation.yield(
+            .progress(bytesWritten: totalBytesWritten, totalBytes: totalBytes, speed: speed)
+        )
     }
 
     func urlSession(
@@ -175,6 +171,7 @@ final class LabradorSessionDelegate: NSObject, URLSessionDownloadDelegate, @unch
 
     private static func seconds(from duration: Duration) -> Double {
         let components = duration.components
-        return Double(components.seconds) + Double(components.attoseconds) / 1_000_000_000_000_000_000
+        return Double(components.seconds) + Double(components.attoseconds)
+            / 1_000_000_000_000_000_000
     }
 }

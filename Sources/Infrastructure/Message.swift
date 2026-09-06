@@ -1,6 +1,6 @@
 //
+// Motley – Michael's Swift Toolkit
 // Copyright 2025-2026 Wells Consulting.
-// This file is part of Motley and is released under the MIT License.
 //
 
 import Foundation
@@ -94,17 +94,12 @@ public struct Message: Hashable, Codable, Sendable {
         details: String? = nil,
         title: String? = nil,
     ) -> Self {
-
-        let summary =
-            (error as? (any MotleyError))?.summary
-            ?? error.localizedDescription
-
-        let details =
-            details
-            ?? (error as? (any MotleyError))?.details
-            ?? (error as? (any LocalizedError))?.failureReason
-
-        return .init(summary: summary, details: details, title: title, kind: .error)
+        .init(
+            summary: error.localizedDescription,
+            details: details ?? (error as? any LocalizedError)?.failureReason,
+            title: title,
+            kind: .error
+        )
     }
 
     /// Notice kind
@@ -122,6 +117,17 @@ public struct Message: Hashable, Codable, Sendable {
                 "Warning"
             case .error:
                 "Error"
+            }
+        }
+
+        public var symbol: SFSymbol {
+            switch self {
+            case .info:
+                .info_circle
+            case .warning:
+                .exclamationmark_circle
+            case .error:
+                .exclamationmark_triangle
             }
         }
 

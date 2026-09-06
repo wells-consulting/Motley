@@ -1,18 +1,16 @@
 //
+// Motley – Michael's Swift Toolkit
 // Copyright 2025-2026 Wells Consulting.
-// This file is part of Motley and is released under the MIT License.
 //
 
 import Foundation
 @testable import Motley
 import Testing
 
-// MARK: - KeychainError
+// MARK: - KeeperError
 
-#if canImport(Security)
-
-@Suite("KeychainError")
-struct KeychainErrorTests {
+@Suite("KeeperError")
+struct KeeperErrorTests {
 
     @Test("itemNotFound has correct summary")
     func itemNotFound() {
@@ -61,19 +59,9 @@ struct KeychainErrorTests {
         #expect(error.underlyingError is TestError)
         #expect(error.details?.contains("data") == true)
     }
-
-    @Test("conforms to Yikes")
-    func YikesConformance() {
-        let error: any MotleyError = KeeperError.itemNotFound(key: "test")
-        #expect(error.details?.contains("test") == true)
-    }
 }
 
-#endif
-
 // MARK: - SelfSignedCertificateDelegate
-
-#if canImport(Security)
 
 @Suite("SelfSignedCertificateDelegate")
 struct SelfSignedCertificateDelegateTests {
@@ -85,5 +73,3 @@ struct SelfSignedCertificateDelegateTests {
         let _: any URLSessionTaskDelegate = SelfSignedCertificateDelegate()
     }
 }
-
-#endif

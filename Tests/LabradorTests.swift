@@ -1,6 +1,6 @@
 //
+// Motley – Michael's Swift Toolkit
 // Copyright 2025-2026 Wells Consulting.
-// This file is part of Motley and is released under the MIT License.
 //
 
 import Foundation
@@ -375,7 +375,7 @@ private func makeMockSession() -> URLSession {
     return URLSession(configuration: config)
 }
 
-private let mockURL = URL(string: "https://test.motley.internal/api")!
+private let mockURL = URL(string: "https://test.myapi.internal/api")!
 
 // Serialized because MockURLProtocol uses shared static state.
 @Suite("Labrador Retry Behavior", .serialized)

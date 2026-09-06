@@ -1,6 +1,6 @@
 //
+// Motley – Michael's Swift Toolkit
 // Copyright 2025-2026 Wells Consulting.
-// This file is part of Motley and is released under the MIT License.
 //
 
 import Foundation
@@ -11,11 +11,7 @@ public struct Jayson: Sendable {
     private let decoder: JSONDecoder
     private let stripNullEscapes: Bool
 
-    private let log = Timber(
-        subsystem: Bundle.appName,
-        category: #fileID,
-        options: [.omitSourceLocation]
-    )
+    private let log = Timber(formatting: [.omitSourceLocation])
 
     public static let shared = Jayson()
 
@@ -35,7 +31,9 @@ public struct Jayson: Sendable {
         public init(
             keyEncodingStrategy: JSONEncoder.KeyEncodingStrategy = .useDefaultKeys,
             dateEncodingStrategy: JSONEncoder.DateEncodingStrategy = .iso8601,
-            outputFormatting: JSONEncoder.OutputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes],
+            outputFormatting: JSONEncoder.OutputFormatting = [
+                .prettyPrinted, .sortedKeys, .withoutEscapingSlashes,
+            ],
             keyDecodingStrategy: JSONDecoder.KeyDecodingStrategy = .useDefaultKeys,
             dateDecodingStrategy: JSONDecoder.DateDecodingStrategy = .iso8601,
             allowsJSON5: Bool = true,
@@ -106,7 +104,8 @@ public struct Jayson: Sendable {
             return try encoder.encode(value)
         } catch let EncodingError.invalidValue(key, context) {
             underlyingError = context.underlyingError
-            summary = "Failed to encode \(T.self): key \"\(key)\" is missing\(context.atPathString)."
+            summary =
+                "Failed to encode \(T.self): key \"\(key)\" is missing\(context.atPathString)."
         } catch {
             underlyingError = error
             summary = "Failed to encode \(T.self)."
@@ -153,9 +152,11 @@ public struct Jayson: Sendable {
 
         let decodableData: Data
         if stripNullEscapes,
-           let str = String(data: data, encoding: .utf8),
-           str.contains("\\u0000") {
-            decodableData = str
+            let str = String(data: data, encoding: .utf8),
+            str.contains("\\u0000")
+        {
+            decodableData =
+                str
                 .replacingOccurrences(of: "\\u0000", with: "")
                 .data(using: .utf8) ?? data
         } else {
@@ -188,7 +189,8 @@ public struct Jayson: Sendable {
             summary = "Failed to decode \(T.self): data corrupted\(context.atPathString)."
         } catch let DecodingError.keyNotFound(key, context) {
             underlyingError = context.underlyingError
-            summary = "Failed to decode \(T.self): missing key \"\(key.stringValue)\"\(context.atPathString)."
+            summary =
+                "Failed to decode \(T.self): missing key \"\(key.stringValue)\"\(context.atPathString)."
         } catch let DecodingError.valueNotFound(type, context) {
             underlyingError = context.underlyingError
             summary = "Failed to decode \(T.self): missing \(type)\(context.atPathString)."
@@ -290,7 +292,8 @@ extension EncodingError.Context {
 
     var atPathString: String {
 
-        let path = codingPath
+        let path =
+            codingPath
             .filter { !$0.stringValue.isEmpty }
             .map(\.stringValue)
             .joined(separator: ".")
@@ -307,7 +310,8 @@ extension DecodingError.Context {
 
     var atPathString: String {
 
-        let path = codingPath
+        let path =
+            codingPath
             .filter { !$0.stringValue.isEmpty }
             .map(\.stringValue)
             .joined(separator: ".")

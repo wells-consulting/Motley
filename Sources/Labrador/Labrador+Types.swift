@@ -1,13 +1,9 @@
 //
+// Motley – Michael's Swift Toolkit
 // Copyright 2025-2026 Wells Consulting.
-// This file is part of Motley and is released under the MIT License.
 //
 
 import Foundation
-
-#if canImport(FoundationNetworking)
-    import FoundationNetworking
-#endif
 
 // MARK: - LogOptions
 
@@ -115,11 +111,11 @@ public extension Labrador {
 
         /// The default set of HTTP status codes considered retryable.
         public static let defaultRetryCodes: Set<Int> = [
-            408, // Request Timeout
-            429, // Too Many Requests
-            502, // Bad Gateway
-            503, // Service Unavailable
-            504, // Gateway Timeout
+            408,  // Request Timeout
+            429,  // Too Many Requests
+            502,  // Bad Gateway
+            503,  // Service Unavailable
+            504,  // Gateway Timeout
         ]
 
         /// The default set of URLError codes considered retryable.
@@ -167,10 +163,11 @@ public extension Labrador {
     /// to the network if it is the last one. An interceptor may call `proceed`
     /// zero or more times — for example, to retry a request after refreshing a
     /// token on a 401 response.
-    typealias Interceptor = @Sendable (
-        _ request: URLRequest,
-        _ proceed: @Sendable (URLRequest) async throws -> (Data, HTTPURLResponse),
-    ) async throws -> (Data, HTTPURLResponse)
+    typealias Interceptor =
+        @Sendable (
+            _ request: URLRequest,
+            _ proceed: @Sendable (URLRequest) async throws -> (Data, HTTPURLResponse),
+        ) async throws -> (Data, HTTPURLResponse)
 }
 
 // MARK: - RequestOptions
@@ -367,8 +364,8 @@ public extension Labrador {
         case noContent = 204
         case resetContent = 205
         case partialContent = 206
-        case multiStatus = 207 // WebDAV
-        case alreadyReported = 208 // WebDAV
+        case multiStatus = 207  // WebDAV
+        case alreadyReported = 208  // WebDAV
         case imUsed = 226
 
         // 3XX
@@ -405,9 +402,9 @@ public extension Labrador {
         case expectationFailed = 417
         case imATeapot = 418
         case misdirectedRequest = 421
-        case unprocessableEntity = 422 // WebDAV
-        case locked = 423 // WebDAV
-        case failedDependency = 424 // WebDAV
+        case unprocessableEntity = 422  // WebDAV
+        case locked = 423  // WebDAV
+        case failedDependency = 424  // WebDAV
         case upgradeRequired = 426
         case preconditionRequired = 428
         case tooManyRequests = 429
@@ -423,8 +420,8 @@ public extension Labrador {
         case gatewayTimeout = 504
         case httpVersionNotSupported = 505
         case variantAlsoNegotiates = 506
-        case insufficientStorage = 507 // WebDAV
-        case loopDetected = 508 // WebDAV
+        case insufficientStorage = 507  // WebDAV
+        case loopDetected = 508  // WebDAV
         case notExtended = 510
         case networkAuthenticationRequired = 511
 

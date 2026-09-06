@@ -3,8 +3,6 @@ included:
   
 excluded:
   - .git
-  - Assets
-  - Scripts
   - Tests
 
 type_name:
@@ -107,3 +105,20 @@ opt_in_rules:
   - vertical_parameter_alignment_on_call
   - vertical_whitespace_closing_braces
   - weak_delegate
+  
+custom_rules:
+  no_try_question:
+    name: "No try?"
+    # The `excluded:` list pins the logging sinks themselves (UserLog,
+    # AuditLog, TraceLog, AppGroupLog). They can't report their own
+    # read/write failures through Log.dev/Log.trace without risking
+    # recursion back into the store they're writing to -- same reasoning
+    # as the FileStore exclusion on no_direct_remove_item_in_downloads
+    # above. Every try? left in those files must carry a one-line comment
+    # explaining why there's no safe sink to report the failure to.
+    regex: '\btry\?'
+    included: 'Sources/.*\.swift'
+    excluded: 
+      - 'Sources/Timber/.*\.swift'
+    message: "Avoid using try?; handle the error explicitly and log failure."
+    severity: warning

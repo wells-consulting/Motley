@@ -1,6 +1,6 @@
 //
+// Motley – Michael's Swift Toolkit
 // Copyright 2025-2026 Wells Consulting.
-// This file is part of Motley and is released under the MIT License.
 //
 
 import Foundation
@@ -12,8 +12,6 @@ public struct LabradorError: MotleyError {
     public let summary: String
     public let details: String?
     public let underlyingError: (any Error)?
-
-    // MARK: LabradorError specific
 
     public let urlRequest: URLRequest?
     public let httpURLResponse: HTTPURLResponse?
@@ -34,10 +32,11 @@ public struct LabradorError: MotleyError {
 
     public func response<T: Decodable>(as type: T.Type) -> T? {
         guard let responseData else { return nil }
+        // swiftlint:disable:next no_try_question
         return try? Jayson.shared.decode(T.self, from: responseData)
     }
 
-    public var kind: ErrorKind {
+    public var errorKind: ErrorKind {
         // Transient HTTP status codes (match RetryPolicy.defaultRetryCodes)
         if let statusCode {
             switch statusCode {

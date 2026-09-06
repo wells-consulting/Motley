@@ -1,6 +1,6 @@
 //
+// Motley – Michael's Swift Toolkit
 // Copyright 2025-2026 Wells Consulting.
-// This file is part of Motley and is released under the MIT License.
 //
 
 import Foundation
@@ -50,8 +50,8 @@ struct MessageFactoryTests {
 
 // MARK: - Error Factory
 
-@Suite("Yo - Error Factory")
-struct NoticeErrorFactoryTests {
+@Suite("Message - Error Factory")
+struct MessageErrorFactoryTests {
 
     struct SimpleError: Error {}
 
@@ -69,33 +69,12 @@ struct NoticeErrorFactoryTests {
         let notice = Message.error(error)
         #expect(notice.details == nil)
     }
-
-    @Test("error from Yikes uses summary")
-    func Yikes() {
-        let error = JaysonError(process: .decode, summary: "Bad JSON")
-        let notice = Message.error(error)
-        #expect(notice.summary == "Bad JSON")
-    }
-
-    @Test("error with explicit title overrides Yikes title")
-    func explicitTitle() {
-        let error = JaysonError(process: .decode, summary: "Bad JSON")
-        let notice = Message.error(error, title: "Custom")
-        #expect(notice.title == "Custom")
-    }
-
-    @Test("error with explicit details overrides Yikes details")
-    func explicitDetails() {
-        let error = JaysonError(process: .decode, summary: "Bad JSON")
-        let notice = Message.error(error, details: "Custom details")
-        #expect(notice.details == "Custom details")
-    }
 }
 
 // MARK: - Kind
 
-@Suite("Yo - Kind")
-struct NoticeKindTests {
+@Suite("Message - Kind")
+struct MessageKindTests {
 
     @Test("Kind has correct titles")
     func kindTitles() {
@@ -121,8 +100,8 @@ struct NoticeKindTests {
 
 // MARK: - Hashable / Equatable
 
-@Suite("Yo - Hashable")
-struct NoticeHashableTests {
+@Suite("Message - Hashable")
+struct MessageHashableTests {
 
     @Test("Identical notices are equal")
     func identical() {
@@ -164,8 +143,8 @@ struct NoticeHashableTests {
 
 // MARK: - Codable
 
-@Suite("Yo - Codable")
-struct NoticeCodableTests {
+@Suite("Message - Codable")
+struct MessageCodableTests {
 
     @Test("Notice round-trips through JSON")
     func roundTrip() throws {

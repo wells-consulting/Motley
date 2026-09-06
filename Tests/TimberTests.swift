@@ -1,23 +1,50 @@
 //
+// Motley – Michael's Swift Toolkit
 // Copyright 2025-2026 Wells Consulting.
-// This file is part of Motley and is released under the MIT License.
 //
 
 import Foundation
-@testable import Motley
+import Synchronization
 import Testing
 
-// MARK: - Test Helper
+@testable import Motley
 
-/// Thread-safe box for capturing sink output in tests.
-private final class SinkCapture: Sendable {
-    nonisolated(unsafe) var level: Timber.Level?
-    nonisolated(unsafe) var subsystem: String?
-    nonisolated(unsafe) var category: String?
-    nonisolated(unsafe) var message: String?
-    nonisolated(unsafe) var file: String?
-    nonisolated(unsafe) var line: UInt?
-    nonisolated(unsafe) var called: Bool = false
+// MARK: - Test Helpers
+
+private func makeTempDir(_ label: String = #function) throws -> URL {
+    let dir = FileManager.default.temporaryDirectory
+        .appendingPathComponent("TimberTests-\(label)-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    return dir
+}
+
+private func cleanUp(_ dir: URL) {
+    try? FileManager.default.removeItem(at: dir)
+}
+
+/// Polls `condition` until it returns `true`, or times out.
+private func waitUntil(
+    timeout: Duration = .milliseconds(2000),
+    _ condition: () async -> Bool
+) async throws {
+    let deadline = ContinuousClock.now + timeout
+    while ContinuousClock.now < deadline {
+        if await condition() { return }
+        try await Task.sleep(for: .milliseconds(10))
+    }
+}
+
+/// A sendable latch for awaiting an arbitrary callback invocation.
+private final class Expectation: Sendable {
+    private let lock = Mutex<Bool>(false)
+
+    func satisfy() {
+        lock.withLock { $0 = true }
+    }
+
+    var isSatisfied: Bool {
+        lock.withLock { $0 }
+    }
 }
 
 // MARK: - Level
@@ -27,38 +54,36 @@ struct TimberLevelTests {
 
     @Test("Level raw values match expected strings")
     func rawValues() {
-        #expect(Timber.Level.debug.rawValue == "debug")
-        #expect(Timber.Level.info.rawValue == "info")
-        #expect(Timber.Level.notice.rawValue == "notice")
-        #expect(Timber.Level.error.rawValue == "error")
-        #expect(Timber.Level.fault.rawValue == "fault")
+        #expect(TimberLogLevel.debug.rawValue == "debug")
+        #expect(TimberLogLevel.info.rawValue == "info")
+        #expect(TimberLogLevel.notice.rawValue == "notice")
+        #expect(TimberLogLevel.error.rawValue == "error")
     }
 
     @Test("Level can be initialized from raw value")
     func fromRawValue() {
-        #expect(Timber.Level(rawValue: "debug") == .debug)
-        #expect(Timber.Level(rawValue: "error") == .error)
-        #expect(Timber.Level(rawValue: "unknown") == nil)
+        #expect(TimberLogLevel(rawValue: "debug") == .debug)
+        #expect(TimberLogLevel(rawValue: "error") == .error)
+        #expect(TimberLogLevel(rawValue: "unknown") == nil)
     }
 
     @Test("All five levels exist")
     func allLevels() {
-        let levels: [Timber.Level] = [.debug, .info, .notice, .error, .fault]
-        #expect(levels.count == 5)
+        let levels: [TimberLogLevel] = [.debug, .info, .notice, .error]
+        #expect(levels.count == 4)
     }
 
     @Test("Levels are ordered by severity")
     func ordering() {
-        #expect(Timber.Level.debug < .info)
-        #expect(Timber.Level.info < .notice)
-        #expect(Timber.Level.notice < .error)
-        #expect(Timber.Level.error < .fault)
+        #expect(TimberLogLevel.debug < .info)
+        #expect(TimberLogLevel.info < .notice)
+        #expect(TimberLogLevel.notice < .error)
     }
 
     @Test("Same level is not less than itself")
     func equalityNotLessThan() {
-        #expect(!(Timber.Level.error < .error))
-        #expect(Timber.Level.error >= .error)
+        #expect(!(TimberLogLevel.error < .error))
+        #expect(TimberLogLevel.error >= .error)
     }
 }
 
@@ -79,410 +104,11 @@ struct TimberInitTests {
         log.debug("explicit init test")
     }
 
-    @Test("Init with nil subsystem falls back")
-    func nilSubsystem() {
-        let log = Timber(subsystem: nil, category: nil)
-        log.debug("nil init test")
-    }
-
-    @Test("Shared instance is accessible")
-    func sharedInstance() {
-        let log = Timber.shared
-        log.debug("shared test")
-    }
-}
-
-// MARK: - All tests that mutate Timber.sink (serialized to avoid races)
-
-@Suite("Timber - Sink", .serialized)
-struct TimberSinkTests {
-
-    // MARK: - Basic Sink
-
-    @Test("Sink receives error messages")
-    func sinkReceivesError() {
-        let capture = SinkCapture()
-
-        Timber.sink = { level, _, _, message, _, _, _ in
-            capture.level = level
-            capture.message = message
-        }
-        defer { Timber.sink = nil }
-
-        let log = Timber(subsystem: "test", category: "sink")
-        log.error("something broke")
-
-        #expect(capture.level == .error)
-        #expect(capture.message == "something broke")
-    }
-
-    @Test("Sink receives fault messages")
-    func sinkReceivesFault() {
-        let capture = SinkCapture()
-
-        Timber.sink = { level, _, _, message, _, _, _ in
-            capture.level = level
-            capture.message = message
-        }
-        defer { Timber.sink = nil }
-
-        let log = Timber(subsystem: "test", category: "sink")
-        log.fault("critical failure")
-
-        #expect(capture.level == .fault)
-        #expect(capture.message == "critical failure")
-    }
-
-    @Test("Sink receives debug messages")
-    func sinkReceivesDebug() {
-        let capture = SinkCapture()
-
-        Timber.sink = { level, _, _, message, _, _, _ in
-            capture.level = level
-            capture.message = message
-        }
-        defer { Timber.sink = nil }
-
-        let log = Timber(subsystem: "test", category: "sink")
-        log.debug("debug message")
-
-        #expect(capture.level == .debug)
-        #expect(capture.message == "debug message")
-    }
-
-    @Test("Sink receives notice messages")
-    func sinkReceivesNotice() {
-        let capture = SinkCapture()
-
-        Timber.sink = { level, _, _, message, _, _, _ in
-            capture.level = level
-            capture.message = message
-        }
-        defer { Timber.sink = nil }
-
-        let log = Timber(subsystem: "test", category: "sink")
-        log.notice("notice message")
-
-        #expect(capture.level == .notice)
-        #expect(capture.message == "notice message")
-    }
-
-    @Test("Sink receives file and line info")
-    func sinkReceivesFileAndLine() {
-        let capture = SinkCapture()
-
-        Timber.sink = { _, _, _, _, file, _, line in
-            capture.file = file
-            capture.line = line
-        }
-        defer { Timber.sink = nil }
-
-        let log = Timber(subsystem: "test", category: "sink")
-        log.error("test"); let expectedLine: UInt = #line
-
-        #expect(capture.line == expectedLine)
-        #expect(capture.file != nil)
-    }
-
-    @Test("Sink receives subsystem and category")
-    func sinkReceivesSubsystemAndCategory() {
-        let capture = SinkCapture()
-
-        Timber.sink = { _, subsystem, category, _, _, _, _ in
-            capture.subsystem = subsystem
-            capture.category = category
-        }
-        defer { Timber.sink = nil }
-
-        let log = Timber(subsystem: "com.example", category: "network")
-        log.error("test")
-
-        #expect(capture.subsystem == "com.example")
-        #expect(capture.category == "network")
-    }
-
-    @Test("Nil sink is safe")
-    func nilSink() {
-        Timber.sink = nil
-
+    @Test("Init without a channel does not persist anything")
+    func nilChannel() {
         let log = Timber(subsystem: "test", category: "sink")
         log.error("no crash")
-        log.fault("no crash")
     }
-
-    // MARK: - Convenience Methods
-
-    @Test("error with task formats message correctly")
-    func errorWithTask() {
-        let capture = SinkCapture()
-
-        Timber.sink = { _, _, _, message, _, _, _ in
-            capture.message = message
-        }
-        defer { Timber.sink = nil }
-
-        let log = Timber(subsystem: "test", category: "conv")
-        log.error("timeout", while: "fetching data")
-
-        #expect(capture.message == "fetching data failed with error: timeout")
-    }
-
-    @Test("error with nil task passes message through")
-    func errorWithoutTask() {
-        let capture = SinkCapture()
-
-        Timber.sink = { _, _, _, message, _, _, _ in
-            capture.message = message
-        }
-        defer { Timber.sink = nil }
-
-        let log = Timber(subsystem: "test", category: "conv")
-        log.error("plain error", while: nil)
-
-        #expect(capture.message == "plain error")
-    }
-
-    @Test("error with Error type formats message")
-    func errorWithErrorType() {
-        let capture = SinkCapture()
-
-        Timber.sink = { _, _, _, message, _, _, _ in
-            capture.message = message
-        }
-        defer { Timber.sink = nil }
-
-        struct TestError: Error, CustomStringConvertible {
-            let description = "test failure"
-        }
-
-        let log = Timber(subsystem: "test", category: "conv")
-        log.error(TestError(), while: "saving")
-
-        #expect(capture.message == "saving failed with error: test failure")
-    }
-
-    @Test("error with Error type and no task")
-    func errorWithErrorTypeNoTask() {
-        let capture = SinkCapture()
-
-        Timber.sink = { _, _, _, message, _, _, _ in
-            capture.message = message
-        }
-        defer { Timber.sink = nil }
-
-        struct TestError: Error, CustomStringConvertible {
-            let description = "bare error"
-        }
-
-        let log = Timber(subsystem: "test", category: "conv")
-        log.error(TestError())
-
-        #expect(capture.message == "bare error")
-    }
-
-    @Test("fault with task formats message correctly")
-    func faultWithTask() {
-        let capture = SinkCapture()
-
-        Timber.sink = { level, _, _, message, _, _, _ in
-            capture.level = level
-            capture.message = message
-        }
-        defer { Timber.sink = nil }
-
-        let log = Timber(subsystem: "test", category: "conv")
-        log.fault("corruption", while: "writing DB")
-
-        #expect(capture.level == .fault)
-        #expect(capture.message == "writing DB failed with error: corruption")
-    }
-
-    @Test("fault with Error type formats message")
-    func faultWithErrorType() {
-        let capture = SinkCapture()
-
-        Timber.sink = { level, _, _, message, _, _, _ in
-            capture.level = level
-            capture.message = message
-        }
-        defer { Timber.sink = nil }
-
-        struct FatalError: Error, CustomStringConvertible {
-            let description = "fatal"
-        }
-
-        let log = Timber(subsystem: "test", category: "conv")
-        log.fault(FatalError(), while: "startup")
-
-        #expect(capture.level == .fault)
-        #expect(capture.message == "startup failed with error: fatal")
-    }
-
-    // MARK: - enableLogStore
-
-    #if canImport(os)
-
-    private func makeTempDir() throws -> URL {
-        let dir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("TimberSinkTests-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        return dir
-    }
-
-    private func cleanUp(_ dir: URL) {
-        try? FileManager.default.removeItem(at: dir)
-    }
-
-    /// Polls the store until entryCount reaches the expected value, or times out.
-    private func waitForEntryCount(
-        _ expected: Int,
-        in store: TimberLogStore,
-        timeout: Duration = .milliseconds(2000)
-    ) async throws {
-        let deadline = ContinuousClock.now + timeout
-        while ContinuousClock.now < deadline {
-            if await store.entryCount >= expected { return }
-            try await Task.sleep(for: .milliseconds(10))
-        }
-    }
-
-    @Test("enableLogStore routes errors to the store")
-    func enableLogStoreRoutesErrors() async throws {
-        let dir = try makeTempDir()
-        defer {
-            Timber.sink = nil
-            cleanUp(dir)
-        }
-
-        let store = TimberLogStore(directory: dir)
-        Timber.enableLogStore(store)
-
-        let log = Timber(subsystem: "test", category: "logstore")
-        log.error("persisted error")
-
-        try await waitForEntryCount(1, in: store)
-
-        let count = await store.entryCount
-        #expect(count == 1)
-
-        let entries = await store.entries
-        #expect(entries[0].message == "persisted error")
-        #expect(entries[0].level == "error")
-    }
-
-    @Test("enableLogStore routes faults to the store")
-    func enableLogStoreRoutesFaults() async throws {
-        let dir = try makeTempDir()
-        defer {
-            Timber.sink = nil
-            cleanUp(dir)
-        }
-
-        let store = TimberLogStore(directory: dir)
-        Timber.enableLogStore(store)
-
-        let log = Timber(subsystem: "test", category: "logstore")
-        log.fault("persisted fault")
-
-        try await waitForEntryCount(1, in: store)
-
-        let count = await store.entryCount
-        #expect(count == 1)
-
-        let entries = await store.entries
-        #expect(entries[0].message == "persisted fault")
-        #expect(entries[0].level == "fault")
-    }
-
-    @Test("enableLogStore default minimumLevel skips debug")
-    func enableLogStoreSkipsDebug() async throws {
-        let dir = try makeTempDir()
-        defer {
-            Timber.sink = nil
-            cleanUp(dir)
-        }
-
-        let store = TimberLogStore(directory: dir)
-        Timber.enableLogStore(store)
-
-        let log = Timber(subsystem: "test", category: "logstore")
-        log.debug("not persisted")
-
-        // Give the sink time to process (debug is below default minimumLevel of .error)
-        try await Task.sleep(for: .milliseconds(100))
-
-        let count = await store.entryCount
-        #expect(count == 0)
-    }
-
-    @Test("enableLogStore with minimumLevel .notice persists notice messages")
-    func enableLogStoreCustomMinimumLevel() async throws {
-        let dir = try makeTempDir()
-        defer {
-            Timber.sink = nil
-            cleanUp(dir)
-        }
-
-        let store = TimberLogStore(directory: dir)
-        Timber.enableLogStore(store, minimumLevel: .notice)
-
-        let log = Timber(subsystem: "test", category: "logstore")
-        log.notice("persisted notice")
-
-        try await waitForEntryCount(1, in: store)
-
-        let count = await store.entryCount
-        #expect(count == 1)
-
-        let entries = await store.entries
-        #expect(entries[0].message == "persisted notice")
-        #expect(entries[0].level == "notice")
-    }
-
-    @Test("enableLogStore with minimumLevel .notice skips info and debug")
-    func enableLogStoreCustomMinimumLevelSkipsLower() async throws {
-        let dir = try makeTempDir()
-        defer {
-            Timber.sink = nil
-            cleanUp(dir)
-        }
-
-        let store = TimberLogStore(directory: dir)
-        Timber.enableLogStore(store, minimumLevel: .notice)
-
-        let log = Timber(subsystem: "test", category: "logstore")
-        log.debug("not persisted")
-        log.info("not persisted")
-
-        // Give the sink time to process (both are below .notice)
-        try await Task.sleep(for: .milliseconds(100))
-
-        let count = await store.entryCount
-        #expect(count == 0)
-    }
-
-    @Test("enableLogStore persists subsystem and category")
-    func enableLogStorePersistsSubsystemAndCategory() async throws {
-        let dir = try makeTempDir()
-        defer {
-            Timber.sink = nil
-            cleanUp(dir)
-        }
-
-        let store = TimberLogStore(directory: dir)
-        Timber.enableLogStore(store)
-
-        let log = Timber(subsystem: "com.example", category: "network")
-        log.error("tagged error")
-
-        try await waitForEntryCount(1, in: store)
-
-        let entries = await store.entries
-        #expect(entries[0].subsystem == "com.example")
-        #expect(entries[0].category == "network")
-    }
-
-    #endif
 }
 
 // MARK: - shortFile helper
@@ -492,7 +118,7 @@ struct TimberShortFileTests {
 
     @Test("Strips module prefix and extension")
     func stripsModuleAndExtension() {
-        #expect(Timber.shortFile("Motley/Labrador.swift") == "Labrador")
+        #expect(Timber.shortFile("MyAppName/Labrador.swift") == "Labrador")
     }
 
     @Test("Strips base-class prefix when + is present")
@@ -516,312 +142,796 @@ struct TimberShortFileTests {
     }
 }
 
+// MARK: - defaultCategory helper
+
+@Suite("Timber.defaultCategory")
+struct TimberDefaultCategoryTests {
+
+    @Test("Strips the module prefix and extension")
+    func stripsModuleAndExtension() {
+        #expect(Timber.defaultCategory(from: "MyAppName/Labrador.swift") == "Labrador")
+    }
+
+    @Test("Works when fileID has no slash")
+    func noSlash() {
+        #expect(Timber.defaultCategory(from: "Labrador.swift") == "Labrador")
+    }
+
+    @Test("Uses the last path component regardless of nesting")
+    func nested() {
+        #expect(Timber.defaultCategory(from: "MyApp/Networking/APIClient.swift") == "APIClient")
+        #expect(Timber.defaultCategory(from: "MyApp/UI/ProfileView.swift") == "ProfileView")
+    }
+
+    @Test("Keeps a + suffix intact, unlike shortFile")
+    func keepsPlusSuffix() {
+        #expect(Timber.defaultCategory(from: "SomeApp/Some+Scene.swift") == "Some+Scene")
+    }
+}
+
 // MARK: - LogEntry
 
 #if canImport(os)
 
-@Suite("TimberLogEntry")
-struct TimberLogEntryTests {
+    @Suite("TimberLogEntry")
+    struct TimberLogEntryTests {
 
-    @Test("LogEntry is Codable round-trip")
-    func codableRoundTrip() throws {
-        let entry = TimberLogEntry(
-            id: UUID(),
-            timestamp: Date(),
-            level: "error",
-            subsystem: "com.test",
-            category: "Tests",
-            message: "something broke",
-            file: "Test.swift",
-            function: "",
-            line: 42
-        )
-
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        let data = try encoder.encode(entry)
-
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let decoded = try decoder.decode(TimberLogEntry.self, from: data)
-
-        #expect(decoded.id == entry.id)
-        #expect(decoded.level == entry.level)
-        #expect(decoded.subsystem == entry.subsystem)
-        #expect(decoded.category == entry.category)
-        #expect(decoded.message == entry.message)
-        #expect(decoded.file == entry.file)
-        #expect(decoded.line == entry.line)
-    }
-
-    @Test("LogEntry has stable id for Identifiable")
-    func identifiable() {
-        let id = UUID()
-        let entry = TimberLogEntry(
-            id: id,
-            timestamp: Date(),
-            level: "fault",
-            subsystem: "com.test",
-            category: "Tests",
-            message: "msg",
-            file: "F.swift",
-            function: "",
-            line: 1
-        )
-        #expect(entry.id == id)
-    }
-}
-
-// MARK: - LogStore
-
-@Suite("TimberLogStore", .serialized)
-struct TimberLogStoreTests {
-
-    /// Creates a fresh temp directory for each test.
-    private func makeTempDir() throws -> URL {
-        let dir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("TimberLogStoreTests-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        return dir
-    }
-
-    private func cleanUp(_ dir: URL) {
-        try? FileManager.default.removeItem(at: dir)
-    }
-
-    @Test("Append and retrieve entries")
-    func appendAndRetrieve() async throws {
-        let dir = try makeTempDir()
-        defer { cleanUp(dir) }
-
-        let store = TimberLogStore(directory: dir)
-        await store.append(level: .error, subsystem: "s", category: "c", message: "err1", file: #fileID, function: #function, line: #line)
-        await store.append(level: .fault, subsystem: "s", category: "c", message: "flt1", file: #fileID, function: #function, line: #line)
-
-        let count = await store.entryCount
-        #expect(count == 2)
-
-        let entries = await store.entries
-        // entries is most-recent-first
-        #expect(entries[0].message == "flt1")
-        #expect(entries[0].level == "fault")
-        #expect(entries[1].message == "err1")
-        #expect(entries[1].level == "error")
-    }
-
-    @Test("Entries persist across re-init from same directory")
-    func persistence() async throws {
-        let dir = try makeTempDir()
-        defer { cleanUp(dir) }
-
-        let store1 = TimberLogStore(directory: dir)
-        await store1.append(level: .error, subsystem: "s", category: "c", message: "persist me", file: #fileID, function: #function, line: #line)
-
-        // Create a new store from the same directory
-        let store2 = TimberLogStore(directory: dir)
-        let count = await store2.entryCount
-        #expect(count == 1)
-
-        let entries = await store2.entries
-        #expect(entries[0].message == "persist me")
-    }
-
-    @Test("deleteAll removes all entries and file")
-    func deleteAll() async throws {
-        let dir = try makeTempDir()
-        defer { cleanUp(dir) }
-
-        let store = TimberLogStore(directory: dir)
-        await store.append(level: .error, subsystem: "s", category: "c", message: "gone", file: #fileID, function: #function, line: #line)
-        await store.deleteAll()
-
-        let count = await store.entryCount
-        #expect(count == 0)
-
-        // File should not exist
-        let fileURL = dir.appendingPathComponent("timber_log.jsonl")
-        #expect(!FileManager.default.fileExists(atPath: fileURL.path))
-    }
-
-    @Test("deleteAll increments generation")
-    func deleteAllIncrementsGeneration() async throws {
-        let dir = try makeTempDir()
-        defer { cleanUp(dir) }
-
-        let store = TimberLogStore(directory: dir)
-        let gen0 = store.currentGeneration
-        #expect(gen0 == 0)
-
-        await store.deleteAll()
-        let gen1 = store.currentGeneration
-        #expect(gen1 == 1)
-
-        await store.deleteAll()
-        let gen2 = store.currentGeneration
-        #expect(gen2 == 2)
-    }
-
-    @Test("append with matching generation succeeds")
-    func appendWithMatchingGeneration() async throws {
-        let dir = try makeTempDir()
-        defer { cleanUp(dir) }
-
-        let store = TimberLogStore(directory: dir)
-        let gen = store.currentGeneration
-        await store.append(generation: gen, level: .error, subsystem: "s", category: "c", message: "kept", file: #fileID, function: #function, line: #line)
-
-        let count = await store.entryCount
-        #expect(count == 1)
-    }
-
-    @Test("append with stale generation is silently dropped")
-    func appendWithStaleGeneration() async throws {
-        let dir = try makeTempDir()
-        defer { cleanUp(dir) }
-
-        let store = TimberLogStore(directory: dir)
-        let staleGen = store.currentGeneration
-        await store.deleteAll() // increments generation
-
-        await store.append(generation: staleGen, level: .error, subsystem: "s", category: "c", message: "stale", file: #fileID, function: #function, line: #line)
-
-        let count = await store.entryCount
-        #expect(count == 0)
-    }
-
-    @Test("Entries are capped at maxEntries")
-    func maxEntriesCap() async throws {
-        let dir = try makeTempDir()
-        defer { cleanUp(dir) }
-
-        // Pre-write maxEntries + 1 entries directly to the file
-        // so we don't need 501 sequential actor calls.
-        let fileURL = dir.appendingPathComponent("timber_log.jsonl")
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-
-        let totalEntries = TimberLogStore.maxEntries + 1
-        var data = Data()
-        for i in 0 ..< totalEntries {
+        @Test("LogEntry is Codable round-trip")
+        func codableRoundTrip() throws {
             let entry = TimberLogEntry(
-                id: UUID(),
                 timestamp: Date(),
-                level: "error",
-                subsystem: "s",
-                category: "c",
-                message: "entry \(i)",
+                level: .error,
+                subsystem: "com.test",
+                category: "Tests",
+                message: "something broke",
                 file: "Test.swift",
                 function: "",
-                line: UInt(i)
+                line: 42
             )
-            data.append(try encoder.encode(entry))
-            data.append(UInt8(ascii: "\n"))
+
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            let data = try encoder.encode(entry)
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let decoded = try decoder.decode(TimberLogEntry.self, from: data)
+
+            #expect(decoded.id == entry.id)
+            #expect(decoded.level == entry.level)
+            #expect(decoded.subsystem == entry.subsystem)
+            #expect(decoded.category == entry.category)
+            #expect(decoded.message == entry.message)
+            #expect(decoded.file == entry.file)
+            #expect(decoded.line == entry.line)
         }
-        try data.write(to: fileURL, options: .atomic)
 
-        // Load the store — it should prune to maxEntries, keeping the newest
-        let store = TimberLogStore(directory: dir)
-
-        let count = await store.entryCount
-        #expect(count == TimberLogStore.maxEntries)
-
-        // Oldest entry (entry 0) should have been discarded
-        let entries = await store.entries
-        let messages = entries.map(\.message)
-        #expect(!messages.contains("entry 0"))
-        #expect(messages.contains("entry \(totalEntries - 1)"))
+        @Test("LogEntry has stable id for Identifiable")
+        func identifiable() {
+            let id = UUID()
+            let entry = TimberLogEntry(
+                id: id,
+                timestamp: Date(),
+                level: .error,
+                subsystem: "com.test",
+                category: "Tests",
+                message: "msg",
+                file: "F.swift",
+                function: "",
+                line: 1
+            )
+            #expect(entry.id == id)
+        }
     }
 
-    @Test("Expired entries are pruned on load")
-    func prunesExpiredOnLoad() async throws {
-        let dir = try makeTempDir()
-        defer { cleanUp(dir) }
+    // MARK: - Timber + Channel
 
-        // Manually write an expired entry to the file
-        let fileURL = dir.appendingPathComponent("timber_log.jsonl")
-        let expired = TimberLogEntry(
-            id: UUID(),
-            timestamp: Date().addingTimeInterval(-(TimberLogStore.maxAge + 1)),
-            level: "error",
+    @Suite("Timber - Channel routing")
+    struct TimberChannelRoutingTests {
+
+        @Test("Logging at or above minimumPersistedLevel persists to the channel")
+        func persistsQualifyingLevels() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let channel = Timber.Channel(
+                name: "test",
+                directory: dir,
+                rotation: .byCountAndAge(maxEntries: 500, maxAge: 7 * 24 * 60 * 60)
+            )
+            let log = Timber(
+                subsystem: "test",
+                category: "channel",
+                channel: channel
+            )
+
+            log.error("persisted error")
+
+            try await waitUntil { await channel.entries.count == 1 }
+
+            let entries = await channel.entries
+            #expect(entries[0].message == "persisted error")
+            #expect(entries[0].level == .error)
+        }
+
+        @Test("Logging below minimumPersistedLevel is not persisted")
+        func skipsBelowMinimumLevel() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let channel = Timber.Channel(
+                name: "test",
+                directory: dir,
+                rotation: .byCountAndAge(maxEntries: 500, maxAge: 7 * 24 * 60 * 60)
+            )
+            let log = Timber(
+                subsystem: "test",
+                category: "channel",
+                channel: channel
+            )
+
+            log.debug("not persisted")
+            log.info("not persisted")
+
+            // Give the actor a moment to process (both are below default .error).
+            try await Task.sleep(for: .milliseconds(100))
+
+            #expect(await channel.entries.isEmpty)
+        }
+
+        @Test("A custom minimumPersistedLevel widens what is persisted")
+        func customMinimumLevel() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let channel = Timber.Channel(
+                name: "test",
+                directory: dir,
+                rotation: .byCountAndAge(maxEntries: 500, maxAge: 7 * 24 * 60 * 60)
+            )
+            let log = Timber(
+                subsystem: "test",
+                category: "channel",
+                channel: channel,
+                minimumPersistedLevel: .notice
+            )
+
+            log.notice("persisted notice")
+
+            try await waitUntil { await channel.entries.count == 1 }
+
+            let entries = await channel.entries
+            #expect(entries[0].message == "persisted notice")
+            #expect(entries[0].level == .notice)
+        }
+
+        @Test("error(_:while:) formats and persists the composed message")
+        func errorWithTaskPersists() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let channel = Timber.Channel(
+                name: "test",
+                directory: dir,
+                rotation: .byCountAndAge(maxEntries: 500, maxAge: 7 * 24 * 60 * 60)
+            )
+            let log = Timber(
+                subsystem: "test",
+                category: "channel",
+                channel: channel
+            )
+
+            log.error("timeout", while: "fetching data")
+
+            try await waitUntil { await channel.entries.count == 1 }
+
+            let entries = await channel.entries
+            #expect(entries[0].message == "fetching data failed with error: timeout")
+        }
+
+        @Test(
+            "One shared instance with a channel persists exactly the qualifying levels"
+        )
+        func persistsExactlyQualifyingLevels() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let channel = Timber.Channel(
+                name: "levels",
+                directory: dir,
+                rotation: .byCountAndAge(maxEntries: 500, maxAge: 7 * 24 * 60 * 60)
+            )
+            let log = Timber(subsystem: "test", channel: channel, minimumPersistedLevel: .notice)
+
+            log.debug("dropped debug")
+            log.info("dropped info")
+            log.notice("kept notice")
+            log.error("kept error")
+
+            try await waitUntil { await channel.entries.count == 2 }
+
+            let entries = await channel.entries
+            #expect(entries.map(\.level) == [.notice, .error])
+            #expect(entries.map(\.message) == ["kept notice", "kept error"])
+        }
+
+        @Test("Persisted category is call-derived, not the instance category")
+        func persistsCallDerivedCategory() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let channel = Timber.Channel(
+                name: "shared",
+                directory: dir,
+                rotation: .byCountAndAge(maxEntries: 500, maxAge: 7 * 24 * 60 * 60)
+            )
+            // One shared, long-lived instance labeled "TraceLog" for os.Logger.
+            let traceLog = Timber(
+                subsystem: "Motley",
+                category: "TraceLog",
+                channel: channel,
+                minimumPersistedLevel: .debug
+            )
+
+            // Call sites from different files on the same instance.
+            traceLog.debug("network event", file: "Motley/Networking/APIClient.swift")
+            traceLog.debug("ui event", file: "Motley/UI/ProfileView.swift")
+
+            try await waitUntil { await channel.entries.count == 2 }
+
+            let entries = await channel.entries
+            #expect(!entries.contains { $0.category == "TraceLog" })
+            let byCategory = Dictionary(grouping: entries, by: \.category)
+            #expect(byCategory["APIClient"]?.first?.message == "network event")
+            #expect(byCategory["ProfileView"]?.first?.message == "ui event")
+        }
+
+        @Test("An explicit category overrides the call-derived one")
+        func explicitCategoryOverrides() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let channel = Timber.Channel(
+                name: "shared",
+                directory: dir,
+                rotation: .byCountAndAge(maxEntries: 500, maxAge: 7 * 24 * 60 * 60)
+            )
+            let log = Timber(subsystem: "Motley", channel: channel, minimumPersistedLevel: .debug)
+
+            log.info("audit event", category: "AuditLog")
+
+            try await waitUntil { await channel.entries.count == 1 }
+
+            let entry = await channel.entries[0]
+            #expect(entry.category == "AuditLog")
+        }
+    }
+
+    // MARK: - Channel: byCountAndAge
+
+    @Suite("Timber.Channel - byCountAndAge", .serialized)
+    struct TimberChannelByCountAndAgeTests {
+
+        @Test("Append and retrieve entries in chronological order")
+        func appendAndRetrieve() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let channel = Timber.Channel(
+                name: "log",
+                directory: dir,
+                rotation: .byCountAndAge(maxEntries: 500, maxAge: 7 * 24 * 60 * 60)
+            )
+
+            await channel.append(makeEntry(message: "not1", level: .notice), generation: 0)
+            await channel.append(makeEntry(message: "err1", level: .error), generation: 0)
+
+            let entries = await channel.entries
+            #expect(entries.count == 2)
+            #expect(entries[0].message == "not1")
+            #expect(entries[1].message == "err1")
+        }
+
+        @Test("Entries persist across re-init from the same directory")
+        func persistence() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let rotation = Timber.Channel.Rotation.byCountAndAge(
+                maxEntries: 500,
+                maxAge: 7 * 24 * 60 * 60
+            )
+            let channel1 = Timber.Channel(name: "log", directory: dir, rotation: rotation)
+            await channel1.append(makeEntry(message: "persist me"), generation: 0)
+
+            let channel2 = Timber.Channel(name: "log", directory: dir, rotation: rotation)
+            let entries = await channel2.entries
+            #expect(entries.count == 1)
+            #expect(entries[0].message == "persist me")
+        }
+
+        @Test("deleteAll removes all entries and the backing file")
+        func deleteAll() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let channel = Timber.Channel(
+                name: "log",
+                directory: dir,
+                rotation: .byCountAndAge(maxEntries: 500, maxAge: 7 * 24 * 60 * 60)
+            )
+            await channel.append(makeEntry(message: "gone"), generation: 0)
+            try await channel.deleteAll()
+
+            #expect(await channel.entries.isEmpty)
+            let fileURL = dir.appendingPathComponent("log.jsonl")
+            #expect(!FileManager.default.fileExists(atPath: fileURL.path))
+        }
+
+        @Test("deleteAll increments the generation, dropping stale in-flight appends")
+        func deleteAllIncrementsGeneration() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let channel = Timber.Channel(
+                name: "log",
+                directory: dir,
+                rotation: .byCountAndAge(maxEntries: 500, maxAge: 7 * 24 * 60 * 60)
+            )
+            let staleGeneration = channel.currentGeneration
+            #expect(staleGeneration == 0)
+
+            try await channel.deleteAll()
+            #expect(channel.currentGeneration == 1)
+
+            await channel.append(makeEntry(message: "stale"), generation: staleGeneration)
+            #expect(await channel.entries.isEmpty)
+        }
+
+        @Test("Append with matching generation succeeds")
+        func appendWithMatchingGeneration() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let channel = Timber.Channel(
+                name: "log",
+                directory: dir,
+                rotation: .byCountAndAge(maxEntries: 500, maxAge: 7 * 24 * 60 * 60)
+            )
+            await channel.append(makeEntry(message: "kept"), generation: channel.currentGeneration)
+            #expect(await channel.entries.count == 1)
+        }
+
+        @Test("Entries are capped at maxEntries, dropping the oldest")
+        func maxEntriesCap() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let maxEntries = 500
+            let fileURL = dir.appendingPathComponent("log.jsonl")
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+
+            var data = Data()
+            for i in 0..<(maxEntries + 1) {
+                let entry = makeEntry(message: "entry \(i)")
+                data.append(try encoder.encode(entry))
+                data.append(UInt8(ascii: "\n"))
+            }
+            try data.write(to: fileURL, options: .atomic)
+
+            let channel = Timber.Channel(
+                name: "log",
+                directory: dir,
+                rotation: .byCountAndAge(maxEntries: maxEntries, maxAge: 7 * 24 * 60 * 60)
+            )
+
+            let entries = await channel.entries
+            #expect(entries.count == maxEntries)
+            let messages = entries.map(\.message)
+            #expect(!messages.contains("entry 0"))
+            #expect(messages.contains("entry \(maxEntries)"))
+        }
+
+        @Test("Expired entries are pruned on load")
+        func prunesExpiredOnLoad() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let maxAge: TimeInterval = 7 * 24 * 60 * 60
+            let fileURL = dir.appendingPathComponent("log.jsonl")
+            let expired = makeEntry(
+                message: "old entry",
+                timestamp: Date().addingTimeInterval(-(maxAge + 1))
+            )
+            let fresh = makeEntry(message: "new entry")
+
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            var data = Data()
+            data.append(try encoder.encode(expired))
+            data.append(UInt8(ascii: "\n"))
+            data.append(try encoder.encode(fresh))
+            data.append(UInt8(ascii: "\n"))
+            try data.write(to: fileURL, options: .atomic)
+
+            let channel = Timber.Channel(
+                name: "log",
+                directory: dir,
+                rotation: .byCountAndAge(maxEntries: 500, maxAge: maxAge)
+            )
+            let entries = await channel.entries
+            #expect(entries.count == 1)
+            #expect(entries[0].message == "new entry")
+        }
+
+        @Test("A short maxAge prunes stale entries appended during a session")
+        func prunesWithShortMaxAge() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let maxAge: TimeInterval = 60
+            let channel = Timber.Channel(
+                name: "log",
+                directory: dir,
+                rotation: .byCountAndAge(maxEntries: 500, maxAge: maxAge)
+            )
+            await channel.append(
+                makeEntry(message: "stale", timestamp: Date().addingTimeInterval(-(maxAge + 30))),
+                generation: 0
+            )
+            await channel.append(makeEntry(message: "fresh"), generation: 0)
+
+            // A re-init reloads the file and drops what is now past maxAge.
+            let reloaded = Timber.Channel(
+                name: "log",
+                directory: dir,
+                rotation: .byCountAndAge(maxEntries: 500, maxAge: maxAge)
+            )
+            let entries = await reloaded.entries
+            #expect(entries.map(\.message) == ["fresh"])
+        }
+
+        @Test("Malformed lines are dropped, not thrown, on load")
+        func dropsMalformedLinesOnLoad() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let fileURL = dir.appendingPathComponent("log.jsonl")
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            var data = try encoder.encode(makeEntry(message: "valid"))
+            data.append(UInt8(ascii: "\n"))
+            data.append(Data("not valid json".utf8))
+            data.append(UInt8(ascii: "\n"))
+            try data.write(to: fileURL, options: .atomic)
+
+            let channel = Timber.Channel(
+                name: "log",
+                directory: dir,
+                rotation: .byCountAndAge(maxEntries: 500, maxAge: 7 * 24 * 60 * 60)
+            )
+            let entries = await channel.entries
+            #expect(entries.count == 1)
+            #expect(entries[0].message == "valid")
+        }
+    }
+
+    // MARK: - Channel: bySize
+
+    @Suite("Timber.Channel - bySize", .serialized)
+    struct TimberChannelBySizeTests {
+
+        @Test("Appending below the threshold does not rotate")
+        func noRotationBelowThreshold() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let channel = Timber.Channel(
+                name: "trace",
+                directory: dir,
+                rotation: .bySize(thresholdBytes: 1_000_000)
+            )
+            await channel.append(makeEntry(message: "small"), generation: 0)
+
+            let rotatedURL = dir.appendingPathComponent("trace.jsonl.1")
+            #expect(!FileManager.default.fileExists(atPath: rotatedURL.path))
+            #expect(await channel.entries.count == 1)
+        }
+
+        @Test("Exceeding the threshold rotates the current file to .1")
+        func rotatesAtThreshold() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            // Threshold small enough that a single entry's line exceeds it.
+            let channel = Timber.Channel(
+                name: "trace",
+                directory: dir,
+                rotation: .bySize(thresholdBytes: 10)
+            )
+
+            await channel.append(makeEntry(message: "first entry over threshold"), generation: 0)
+            await channel.append(makeEntry(message: "second entry"), generation: 0)
+
+            let rotatedURL = dir.appendingPathComponent("trace.jsonl.1")
+            let currentURL = dir.appendingPathComponent("trace.jsonl")
+            #expect(FileManager.default.fileExists(atPath: rotatedURL.path))
+            #expect(FileManager.default.fileExists(atPath: currentURL.path))
+
+            let entries = await channel.entries
+            #expect(entries.count == 2)
+            #expect(entries[0].message == "first entry over threshold")
+            #expect(entries[1].message == "second entry")
+        }
+
+        @Test("Rotating a second time drops the prior .1 file")
+        func rotationDropsPriorRotatedFile() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let channel = Timber.Channel(
+                name: "trace",
+                directory: dir,
+                rotation: .bySize(thresholdBytes: 10)
+            )
+
+            await channel.append(makeEntry(message: "one"), generation: 0)
+            await channel.append(makeEntry(message: "two"), generation: 0)
+            await channel.append(makeEntry(message: "three"), generation: 0)
+
+            let entries = await channel.entries
+            // "one" was pushed into .1, then discarded when "two" rotated again.
+            #expect(!entries.contains { $0.message == "one" })
+            #expect(entries.contains { $0.message == "two" })
+            #expect(entries.contains { $0.message == "three" })
+        }
+
+        @Test("deleteAll removes both the current and rotated files")
+        func deleteAllRemovesBothFiles() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let channel = Timber.Channel(
+                name: "trace",
+                directory: dir,
+                rotation: .bySize(thresholdBytes: 10)
+            )
+            await channel.append(makeEntry(message: "one"), generation: 0)
+            await channel.append(makeEntry(message: "two"), generation: 0)
+
+            try await channel.deleteAll()
+
+            #expect(await channel.entries.isEmpty)
+            #expect(
+                !FileManager.default.fileExists(
+                    atPath: dir.appendingPathComponent("trace.jsonl").path
+                )
+            )
+            #expect(
+                !FileManager.default.fileExists(
+                    atPath: dir.appendingPathComponent("trace.jsonl.1").path
+                )
+            )
+        }
+    }
+
+    // MARK: - TimberLineStore
+
+    @Suite("TimberLineStore", .serialized)
+    struct TimberLineStoreTests {
+
+        @Test("Appended lines are retrievable in order")
+        func appendAndRetrieve() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let store = TimberLineStore(
+                directory: dir,
+                fileName: "audit.log",
+                thresholdBytes: 1_000_000
+            )
+            await store.append("first line")
+            await store.append("second line")
+
+            let lines = await store.lines
+            #expect(lines == ["first line", "second line"])
+        }
+
+        @Test("Exceeding the threshold rotates the current file to .1")
+        func rotatesAtThreshold() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let store = TimberLineStore(directory: dir, fileName: "audit.log", thresholdBytes: 10)
+            await store.append("a line long enough to exceed the threshold")
+            await store.append("second line")
+
+            let rotatedURL = dir.appendingPathComponent("audit.log.1")
+            let currentURL = dir.appendingPathComponent("audit.log")
+            #expect(FileManager.default.fileExists(atPath: rotatedURL.path))
+            #expect(FileManager.default.fileExists(atPath: currentURL.path))
+
+            let lines = await store.lines
+            #expect(lines == ["a line long enough to exceed the threshold", "second line"])
+        }
+
+        @Test("deleteAll removes both the current and rotated files")
+        func deleteAllRemovesBothFiles() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let store = TimberLineStore(directory: dir, fileName: "audit.log", thresholdBytes: 10)
+            await store.append("a line long enough to exceed the threshold")
+            await store.append("second line")
+
+            try await store.deleteAll()
+
+            #expect(await store.lines.isEmpty)
+            #expect(
+                !FileManager.default.fileExists(
+                    atPath: dir.appendingPathComponent("audit.log").path
+                )
+            )
+            #expect(
+                !FileManager.default.fileExists(
+                    atPath: dir.appendingPathComponent("audit.log.1").path
+                )
+            )
+        }
+    }
+
+    // MARK: - Channel: maxReadEntries
+
+    @Suite("Timber.Channel - maxReadEntries", .serialized)
+    struct TimberChannelMaxReadEntriesTests {
+
+        @Test("byCountAndAge caps entries to the most recent maxReadEntries")
+        func truncatesByCountAndAge() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let channel = Timber.Channel(
+                name: "log",
+                directory: dir,
+                rotation: .byCountAndAge(maxEntries: 500, maxAge: 7 * 24 * 60 * 60),
+                maxReadEntries: 2
+            )
+            for i in 0..<5 {
+                await channel.append(makeEntry(message: "entry \(i)"), generation: 0)
+            }
+
+            let messages = await channel.entries.map(\.message)
+            #expect(messages == ["entry 3", "entry 4"])
+        }
+
+        @Test("bySize caps the merged rotated+current entries to maxReadEntries")
+        func truncatesBySize() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            // Small threshold forces the first entry into the rotated file.
+            let channel = Timber.Channel(
+                name: "trace",
+                directory: dir,
+                rotation: .bySize(thresholdBytes: 10),
+                maxReadEntries: 1
+            )
+            await channel.append(makeEntry(message: "one"), generation: 0)
+            await channel.append(makeEntry(message: "two"), generation: 0)
+
+            let messages = await channel.entries.map(\.message)
+            #expect(messages == ["two"])
+        }
+
+        @Test("maxReadEntries nil returns all entries")
+        func noCapByDefault() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let channel = Timber.Channel(
+                name: "log",
+                directory: dir,
+                rotation: .byCountAndAge(maxEntries: 500, maxAge: 7 * 24 * 60 * 60)
+            )
+            await channel.append(makeEntry(message: "one"), generation: 0)
+            await channel.append(makeEntry(message: "two"), generation: 0)
+
+            #expect(await channel.entries.count == 2)
+        }
+    }
+
+    // MARK: - Channel: Synchronous conveniences
+
+    @Suite("Timber.Channel - appendSync/deleteAllSync", .serialized)
+    struct TimberChannelSyncConvenienceTests {
+
+        @Test("appendSync persists the entry without awaiting")
+        func appendSync() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let channel = Timber.Channel(
+                name: "log",
+                directory: dir,
+                rotation: .byCountAndAge(maxEntries: 500, maxAge: 7 * 24 * 60 * 60)
+            )
+            channel.appendSync(makeEntry(message: "sync appended"))
+
+            try await waitUntil { await channel.entries.count == 1 }
+            #expect(await channel.entries.first?.message == "sync appended")
+        }
+
+        @Test("deleteAllSync removes all entries without awaiting")
+        func deleteAllSync() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let channel = Timber.Channel(
+                name: "log",
+                directory: dir,
+                rotation: .byCountAndAge(maxEntries: 500, maxAge: 7 * 24 * 60 * 60)
+            )
+            await channel.append(makeEntry(message: "gone"), generation: 0)
+
+            channel.deleteAllSync()
+
+            try await waitUntil { await channel.entries.isEmpty }
+            #expect(
+                !FileManager.default.fileExists(
+                    atPath: dir.appendingPathComponent("log.jsonl").path
+                )
+            )
+        }
+
+        @Test("deleteAllSync onFailure fires when deleteAll throws")
+        func deleteAllSyncOnFailure() async throws {
+            let dir = try makeTempDir()
+            defer { cleanUp(dir) }
+
+            let channel = Timber.Channel(
+                name: "log",
+                directory: dir,
+                rotation: .byCountAndAge(maxEntries: 500, maxAge: 7 * 24 * 60 * 60)
+            )
+            await channel.append(makeEntry(message: "locked"), generation: 0)
+
+            // Immutable files cannot be removed, so deleteAll is guaranteed to throw.
+            let fileURL = dir.appendingPathComponent("log.jsonl")
+            try FileManager.default.setAttributes([.immutable: true], ofItemAtPath: fileURL.path)
+            defer {
+                try? FileManager.default.setAttributes(
+                    [.immutable: false],
+                    ofItemAtPath: fileURL.path
+                )
+            }
+
+            let failureExpectation = Expectation()
+            channel.deleteAllSync { _ in
+                failureExpectation.satisfy()
+            }
+
+            try await waitUntil { failureExpectation.isSatisfied }
+        }
+    }
+
+    // MARK: - Test Fixtures
+
+    private func makeEntry(
+        message: String,
+        level: TimberLogLevel = .error,
+        timestamp: Date = Date()
+    ) -> TimberLogEntry {
+        TimberLogEntry(
+            timestamp: timestamp,
+            level: level,
             subsystem: "s",
             category: "c",
-            message: "old entry",
-            file: "Old.swift",
+            message: message,
+            file: "Test.swift",
             function: "",
             line: 1
         )
-        let fresh = TimberLogEntry(
-            id: UUID(),
-            timestamp: Date(),
-            level: "error",
-            subsystem: "s",
-            category: "c",
-            message: "new entry",
-            file: "New.swift",
-            function: "",
-            line: 2
-        )
-
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        var data = Data()
-        data.append(try encoder.encode(expired))
-        data.append(UInt8(ascii: "\n"))
-        data.append(try encoder.encode(fresh))
-        data.append(UInt8(ascii: "\n"))
-        try data.write(to: fileURL, options: .atomic)
-
-        // Load the store — expired entry should be pruned
-        let store = TimberLogStore(directory: dir)
-        let count = await store.entryCount
-        #expect(count == 1)
-
-        let entries = await store.entries
-        #expect(entries[0].message == "new entry")
     }
-
-    @Test("entryCount matches entries.count")
-    func entryCountMatchesEntries() async throws {
-        let dir = try makeTempDir()
-        defer { cleanUp(dir) }
-
-        let store = TimberLogStore(directory: dir)
-        await store.append(level: .error, subsystem: "s", category: "c", message: "a", file: #fileID, function: #function, line: #line)
-        await store.append(level: .fault, subsystem: "s", category: "c", message: "b", file: #fileID, function: #function, line: #line)
-        await store.append(level: .error, subsystem: "s", category: "c", message: "c", file: #fileID, function: #function, line: #line)
-
-        let count = await store.entryCount
-        let entries = await store.entries
-        #expect(count == entries.count)
-        #expect(count == 3)
-    }
-
-    @Test("Entries record file and line")
-    func recordsFileAndLine() async throws {
-        let dir = try makeTempDir()
-        defer { cleanUp(dir) }
-
-        let store = TimberLogStore(directory: dir)
-        let expectedLine: UInt = #line + 1
-        await store.append(level: .error, subsystem: "s", category: "c", message: "loc", file: #fileID, function: #function, line: expectedLine)
-
-        let entries = await store.entries
-        #expect(entries[0].file.contains("TimberTests"))
-        #expect(entries[0].line == expectedLine)
-    }
-
-    @Test("Empty store on fresh directory")
-    func emptyOnFreshDir() async throws {
-        let dir = try makeTempDir()
-        defer { cleanUp(dir) }
-
-        let store = TimberLogStore(directory: dir)
-        let count = await store.entryCount
-        #expect(count == 0)
-
-        let entries = await store.entries
-        #expect(entries.isEmpty)
-    }
-}
 
 #endif

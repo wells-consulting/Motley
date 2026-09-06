@@ -1,9 +1,7 @@
 //
+// Motley – Michael's Swift Toolkit
 // Copyright 2025-2026 Wells Consulting.
-// This file is part of Motley and is released under the MIT License.
 //
-
-#if canImport(Security)
 
 import Foundation
 
@@ -86,5 +84,3 @@ public struct KeeperError: MotleyError {
         )
     }
 }
-
-#endif
