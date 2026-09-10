@@ -5,6 +5,26 @@
 
 import Foundation
 
+/// All Errors thrown by Motely conforms to this protocol. The only
+/// required property is summary. All the others have reasonable
+/// defaults.
+public protocol MotleyError: LocalizedError {
+    var summary: String { get }
+    var details: String? { get }
+    var underlyingError: (any Error)? { get }
+    var errorKind: ErrorKind { get }
+}
+
+// MARK: Default Implementation
+
+public extension MotleyError {
+    var details: String? { nil }
+    var underlyingError: (any Error)? { nil }
+    var errorKind: ErrorKind { .unclassified }
+}
+
+// MARK: - ErrorKind
+
 public enum ErrorKind: String, Sendable {
 
     /// Transient failures that may succeed on retry (network timeout, temporary
