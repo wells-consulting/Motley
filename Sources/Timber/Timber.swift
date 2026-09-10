@@ -284,12 +284,12 @@ extension Timber {
     ///
     /// Steps applied in order:
     /// 1. Strip the module prefix and slash
-    ///    `"MyApp/Networking/APIClient.swift"` → `"APIClient.swift"`
+    ///    `"MyApp/Networking/APIClient.swift"` → `"Networking/APIClient.swift"`
     /// 2. Strip the file extension
-    ///    `"APIClient.swift"` → `"APIClient"`
+    ///    `"Networking/APIClient.swift"` → `"Networking/APIClient"`
     public static func defaultCategory(from file: String) -> String {
         var name = file
-        if let slash = name.lastIndex(of: "/") {
+        if let slash = name.firstIndex(of: "/") {
             name = String(name[name.index(after: slash)...])
         }
         if let dot = name.lastIndex(of: ".") {

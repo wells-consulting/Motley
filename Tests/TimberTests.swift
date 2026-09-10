@@ -157,10 +157,10 @@ struct TimberDefaultCategoryTests {
         #expect(Timber.defaultCategory(from: "Labrador.swift") == "Labrador")
     }
 
-    @Test("Uses the last path component regardless of nesting")
+    @Test("Preserves subdirectory structure, stripping only the module prefix")
     func nested() {
-        #expect(Timber.defaultCategory(from: "MyApp/Networking/APIClient.swift") == "APIClient")
-        #expect(Timber.defaultCategory(from: "MyApp/UI/ProfileView.swift") == "ProfileView")
+        #expect(Timber.defaultCategory(from: "MyApp/Networking/APIClient.swift") == "Networking/APIClient")
+        #expect(Timber.defaultCategory(from: "MyApp/UI/ProfileView.swift") == "UI/ProfileView")
     }
 
     @Test("Keeps a + suffix intact, unlike shortFile")
