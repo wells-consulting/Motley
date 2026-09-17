@@ -110,7 +110,7 @@ public struct Timber: Sendable {
         function: String = #function,
         line: UInt = #line,
         category: String? = nil,
-        ) {
+    ) {
         let formatted = formatMessage(
             message,
             formatting: formatting ?? self.formatting,
@@ -137,7 +137,7 @@ public struct Timber: Sendable {
         function: String = #function,
         line: UInt = #line,
         category: String? = nil,
-        ) {
+    ) {
         let formatted = formatMessage(
             message,
             formatting: formatting ?? self.formatting,
@@ -164,7 +164,7 @@ public struct Timber: Sendable {
         function: String = #function,
         line: UInt = #line,
         category: String? = nil,
-        ) {
+    ) {
         let formatted = formatMessage(
             message,
             formatting: formatting ?? self.formatting,
@@ -191,7 +191,7 @@ public struct Timber: Sendable {
         function: String = #function,
         line: UInt = #line,
         category: String? = nil,
-        ) {
+    ) {
         let formatted = formatMessage(
             message,
             formatting: formatting ?? self.formatting,
@@ -225,7 +225,7 @@ public struct Timber: Sendable {
         function: String = #function,
         line: UInt = #line,
         category: String? = nil,
-        ) {
+    ) {
         let taskMessage = task.map { "\($0) failed with error: \(message)" } ?? message
         let formatted = formatMessage(
             taskMessage,
@@ -254,7 +254,7 @@ public struct Timber: Sendable {
         function: String = #function,
         line: UInt = #line,
         category: String? = nil,
-        ) {
+    ) {
         let errorMessage = task.map { "\($0) failed with error: \(error)" } ?? "\(error)"
         let formatted = formatMessage(
             errorMessage,
@@ -328,26 +328,30 @@ extension Timber {
         function: String,
         line: UInt
     ) -> String {
-        guard let formatting, !formatting.isEmpty else { return message }
+        guard
+            let effectiveFormatting = formatting ?? self.formatting,
+            !effectiveFormatting.isEmpty,
+            !effectiveFormatting.contains(.omitSourceLocation)
+        else { return message }
         var location = String()
         location.reserveCapacity(64)
-        if !formatting.contains(.omitFile) {
+        if !effectiveFormatting.contains(.omitFile) {
             location.append(Self.shortFile(file))
         }
-        if !formatting.contains(.omitFunction), !function.isEmpty {
+        if !effectiveFormatting.contains(.omitFunction), !function.isEmpty {
             if !location.isEmpty { location.append(":") }
-            if formatting.contains(.omitParameterLabels) {
+            if effectiveFormatting.contains(.omitParameterLabels) {
                 location.append(function.functionBaseName)
             } else {
                 location.append(function)
             }
         }
-        if !formatting.contains(.omitLine) {
+        if !effectiveFormatting.contains(.omitLine) {
             if !location.isEmpty { location.append(":") }
             location.append("\(line)")
         }
         guard !location.isEmpty else { return message }
-        if formatting.contains(.decorateSourceLocation) {
+        if effectiveFormatting.contains(.decorateSourceLocation) {
             return "\(message) [\(location)]"
         }
         return "\(message) \(location)"

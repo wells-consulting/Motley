@@ -382,8 +382,8 @@ struct TimberDefaultCategoryTests {
             let entries = await channel.entries
             #expect(!entries.contains { $0.category == "TraceLog" })
             let byCategory = Dictionary(grouping: entries, by: \.category)
-            #expect(byCategory["APIClient"]?.first?.message == "network event")
-            #expect(byCategory["ProfileView"]?.first?.message == "ui event")
+            #expect(byCategory["Networking/APIClient"]?.first?.message == "network event")
+            #expect(byCategory["UI/ProfileView"]?.first?.message == "ui event")
         }
 
         @Test("An explicit category overrides the call-derived one")
