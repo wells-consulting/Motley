@@ -25,6 +25,23 @@ public struct Message: Hashable, Codable, Sendable {
 
     // MARK: - Factory Methods
 
+    /// Creates a text notice.
+    ///
+    /// - Parameters:
+    ///     - summary: Notice text
+    ///     - details: Verbose and possibly debug text
+    ///     - title: Title
+    ///
+    /// - Returns:
+    ///     Informational notice
+    public static func text(
+        _ summary: String,
+        details: String? = nil,
+        title: String? = nil,
+    ) -> Self {
+        .init(summary: summary, details: details, title: title, kind: .text)
+    }
+
     /// Creates an informational notice.
     ///
     /// - Parameters:
@@ -51,12 +68,12 @@ public struct Message: Hashable, Codable, Sendable {
     ///
     /// - Returns:
     ///     Warning notice
-    public static func warning(
+    public static func notice(
         _ summary: String,
         details: String? = nil,
         title: String? = nil,
     ) -> Self {
-        .init(summary: summary, details: details, title: title, kind: .warning)
+        .init(summary: summary, details: details, title: title, kind: .notice)
     }
 
     /// Creates an error notice.
@@ -105,29 +122,34 @@ public struct Message: Hashable, Codable, Sendable {
     /// Notice kind
     public enum Kind: Int, Equatable, Comparable, Codable, Sendable {
 
+        case text
         case info
-        case warning
+        case notice
         case error
 
         public var title: String {
             switch self {
+            case .text:
+                "Text"
             case .info:
                 "Info"
-            case .warning:
-                "Warning"
+            case .notice:
+                "Notice"
             case .error:
                 "Error"
             }
         }
 
-        public var symbol: SFSymbol {
+        public var symbol: SFSymbol? {
             switch self {
+            case .text:
+                .bubble
             case .info:
                 .info_circle
-            case .warning:
+            case .notice:
                 .exclamationmark_circle
             case .error:
-                .exclamationmark_triangle
+                .exclamationmark_triangle_fill
             }
         }
 
