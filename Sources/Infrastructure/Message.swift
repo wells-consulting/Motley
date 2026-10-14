@@ -15,13 +15,22 @@ public struct Message: Hashable, Codable, Sendable {
     public let summary: String
 
     /// Additional details
-    public let details: String?
+    public var details: String?
 
     /// Title; typically used in UI for dialogs or alerts
-    public let title: String?
+    public var title: String?
 
     /// Notice kind; typically used to style text in UI
     public let kind: Kind
+
+    // MARK: - Initializer
+
+    init(summary: String, details: String? = nil, title: String? = nil, kind: Kind) {
+        self.summary = summary
+        self.details = details
+        self.title = title
+        self.kind = kind
+    }
 
     // MARK: - Factory Methods
 
