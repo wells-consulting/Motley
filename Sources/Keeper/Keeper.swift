@@ -10,7 +10,7 @@ import Security
 ///
 /// Values are encoded/decoded with ``Jayson`` and stored as
 /// `kSecClassGenericPassword` items keyed by the provided string key.
-public struct Keeper: Sendable {
+public struct Keeper: Sendable, SecureStoring {
 
     private let service: String
     private let accessGroup: String?
