@@ -19,10 +19,10 @@ struct MessageFactoryTests {
         #expect(notice.summary == "All good")
     }
 
-    @Test("warning creates notice with warning kind")
-    func warningKind() {
-        let notice = Message.warning("Watch out")
-        #expect(notice.kind == .warning)
+    @Test("notice creates a notice")
+    func noticeKind() {
+        let notice = Message.notice("Watch out")
+        #expect(notice.kind == .notice)
         #expect(notice.summary == "Watch out")
     }
 
@@ -78,23 +78,26 @@ struct MessageKindTests {
 
     @Test("Kind has correct titles")
     func kindTitles() {
+        #expect(Message.Kind.text.title == "Text")
         #expect(Message.Kind.info.title == "Info")
-        #expect(Message.Kind.warning.title == "Warning")
+        #expect(Message.Kind.notice.title == "Notice")
         #expect(Message.Kind.error.title == "Error")
     }
 
-    @Test("Kind is Comparable - info < warning < error")
+    @Test("Kind is Comparable - text < info < notice < error")
     func kindOrdering() {
-        #expect(Message.Kind.info < .warning)
-        #expect(Message.Kind.warning < .error)
+        #expect(Message.Kind.text < .info)
+        #expect(Message.Kind.info < .notice)
+        #expect(Message.Kind.notice < .error)
         #expect(!(Message.Kind.error < .info))
     }
 
     @Test("Kind raw values are ordered")
     func kindRawValues() {
-        #expect(Message.Kind.info.rawValue == 0)
-        #expect(Message.Kind.warning.rawValue == 1)
-        #expect(Message.Kind.error.rawValue == 2)
+        #expect(Message.Kind.text.rawValue == 0)
+        #expect(Message.Kind.info.rawValue == 1)
+        #expect(Message.Kind.notice.rawValue == 2)
+        #expect(Message.Kind.error.rawValue == 3)
     }
 }
 
@@ -134,7 +137,7 @@ struct MessageHashableTests {
     @Test("Notices can be stored in a Set")
     func setStorage() {
         let a = Message.info("A")
-        let b = Message.warning("B")
+        let b = Message.notice("B")
         let c = Message.info("A")
         let set: Set<Message> = [a, b, c]
         #expect(set.count == 2)
@@ -148,7 +151,7 @@ struct MessageCodableTests {
 
     @Test("Notice round-trips through JSON")
     func roundTrip() throws {
-        let original = Message.warning("Watch out", details: "Details here", title: "Warning Title")
+        let original = Message.notice("Watch out", details: "Details here", title: "Notice Title")
         let data = try JSONEncoder().encode(original)
         let decoded = try JSONDecoder().decode(Message.self, from: data)
         #expect(decoded == original)
