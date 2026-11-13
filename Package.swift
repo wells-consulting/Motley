@@ -6,7 +6,7 @@ let package = Package(
     name: "Motley",
     platforms: [
         .iOS(.v18),
-        .watchOS(.v9),
+        .watchOS(.v11),
         .tvOS(.v18),
         .macOS(.v15),
     ],
