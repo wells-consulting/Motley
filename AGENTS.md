@@ -65,3 +65,7 @@ If the Xcode MCP is configured, prefer its tools over generic alternatives when 
 - `XcodeListNavigatorIssues` — check for issues visible in the Xcode Issue Navigator
 - `ExecuteSnippet` — test a code snippet in the context of a source file
 - `XcodeRead`, `XcodeWrite`, `XcodeUpdate` — prefer these over generic file tools when working with Xcode project files
+
+## Skills
+
+The repo has one skill of its own, `motley-change`, in `.agents/skills/` — the neutral path, which OpenCode reads. Claude Code reads `.claude/skills/` instead, and `.claude` is gitignored here, so `~/Sources/Skills/Tools/link-claude.sh` links one to the other on each machine. Edit the real file, and keep its frontmatter to `name` and `description`: anything else belongs to one agent and the other ignores it.
