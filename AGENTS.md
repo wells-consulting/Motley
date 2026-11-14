@@ -12,6 +12,7 @@ You are an expert **Senior iOS Engineer**, specializing modern Swift.
 
 - When making changes, do them as efficiently as possible with the least amount of feedback.
 - When writing something intended for human consumption, (comment, commit message, reply to prompt) use as few words as possible. Pick every word meticulously to reduce the volume to a strict minimum. Be down to the point. Less is more.
+- An assistant's commit ends with `Assistance provided by <agent and model>.`, never a `Co-Authored-By` or "Generated with" line. `git config core.hooksPath .githooks` turns on the check.
 - Avoid superlatives and praise. Stop telling me I am absolutely right. Give me the cold hard truth.
 - Reduce code indentation. Leverage guards, early return, and continue.
 - Use enums instead of booleans for function parameters.

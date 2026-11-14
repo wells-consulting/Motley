@@ -1,0 +1,24 @@
+#!/bin/sh
+#
+# Rejects the attribution trailers the repo's guide doesn't use, and reminds
+# the author of the plain line it asks for. Turn it on with:
+#
+#   git config core.hooksPath .githooks
+
+set -eu
+
+message=$(cat "$1")
+
+if printf '%s\n' "$message" | grep -qiE '^Co-Authored-By:'; then
+    echo 'No Co-Authored-By trailers. End the message with "Assistance provided by <agent and model>."' >&2
+    exit 1
+fi
+
+if printf '%s\n' "$message" | grep -qiE '^Generated with'; then
+    echo 'No "Generated with" lines. End the message with "Assistance provided by <agent and model>."' >&2
+    exit 1
+fi
+
+if ! printf '%s\n' "$message" | grep -q 'Assistance provided by '; then
+    echo 'Reminder: if an assistant helped, end the message with "Assistance provided by <agent and model>."' >&2
+fi
