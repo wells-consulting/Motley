@@ -84,7 +84,7 @@ public extension Error {
 
     /// Returns a concise, readable summary when this error (or a wrapped underlying
     /// error) is a `URLError`. Returns `nil` for non-URL errors — callers fall back
-    /// to the raw Motley diagnostics string in that case.
+    /// to the raw diagnostics string in that case.
     ///
     /// Example output:
     /// ```

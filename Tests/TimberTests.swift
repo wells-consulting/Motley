@@ -367,15 +367,15 @@ struct TimberDefaultCategoryTests {
             )
             // One shared, long-lived instance labeled "TraceLog" for os.Logger.
             let traceLog = Timber(
-                subsystem: "Motley",
+                subsystem: "Example",
                 category: "TraceLog",
                 channel: channel,
                 minimumPersistedLevel: .debug
             )
 
             // Call sites from different files on the same instance.
-            traceLog.debug("network event", file: "Motley/Networking/APIClient.swift")
-            traceLog.debug("ui event", file: "Motley/UI/ProfileView.swift")
+            traceLog.debug("network event", file: "Example/Networking/APIClient.swift")
+            traceLog.debug("ui event", file: "Example/UI/ProfileView.swift")
 
             try await waitUntil { await channel.entries.count == 2 }
 
@@ -396,7 +396,7 @@ struct TimberDefaultCategoryTests {
                 directory: dir,
                 rotation: .byCountAndAge(maxEntries: 500, maxAge: 7 * 24 * 60 * 60)
             )
-            let log = Timber(subsystem: "Motley", channel: channel, minimumPersistedLevel: .debug)
+            let log = Timber(subsystem: "Example", channel: channel, minimumPersistedLevel: .debug)
 
             log.info("audit event", category: "AuditLog")
 

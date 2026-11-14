@@ -105,7 +105,7 @@ struct UnzipperTests {
         return output.prefix(written)
     }
 
-    private static let text = String(repeating: "Motley reads the meter. ", count: 40)
+    private static let text = String(repeating: "The meter is read once an hour. ", count: 40)
 
     // MARK: - Tests
 
