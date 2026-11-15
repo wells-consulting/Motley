@@ -31,8 +31,8 @@ One module, `Motley`, one product, and a folder per job under `Sources/`:
 ## Requirements
 
 - Swift 6.4 tools, Swift 6 language mode, strict concurrency.
-- iOS 18, tvOS 18, watchOS 11, macOS 15. Raising the floor reaches three apps,
-  so check `Package.swift` before reaching for an API.
+- iOS 18, tvOS 18, watchOS 11, macOS 15. Raising the floor breaks three apps,
+  so check `Package.swift` before you use a new API.
 - One dependency, `SwiftLintPlugins`, and only as a build plugin.
 
 ## Rules
