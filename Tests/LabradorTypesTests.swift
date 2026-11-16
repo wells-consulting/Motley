@@ -180,11 +180,11 @@ struct RetryPolicyBackoffTests {
         let defaults = Labrador.RetryPolicy.defaultRetryCodes
         #expect(defaults.contains(408))
         #expect(defaults.contains(429))
+        #expect(defaults.contains(500))
         #expect(defaults.contains(502))
         #expect(defaults.contains(503))
         #expect(defaults.contains(504))
         #expect(!defaults.contains(400))
-        #expect(!defaults.contains(500))
     }
 
     @Test("RetryPolicy - default retry URL errors")

@@ -42,7 +42,7 @@ public struct LabradorError: MotleyError {
             switch statusCode {
             case .requestTimeout, .tooManyRequests:
                 return .transient
-            case .badGateway, .serviceUnavailable, .gatewayTimeout:
+            case .internalServerError, .badGateway, .serviceUnavailable, .gatewayTimeout:
                 return .transient
             default:
                 return .persistent

@@ -475,3 +475,64 @@ struct LabradorRetryTests {
         #expect(MockURLProtocol.callCount == 1)
     }
 }
+
+// MARK: - Retry Header Tests
+
+@Suite("Labrador Retry Headers")
+struct LabradorRetryHeaderTests {
+
+    private static func response(_ headers: [String: String]) -> HTTPURLResponse {
+        HTTPURLResponse(
+            url: URL(string: "https://example.com/status")!,
+            statusCode: 429,
+            httpVersion: "HTTP/1.1",
+            headerFields: headers,
+        )!
+    }
+
+    @Test("Retry-After is read in seconds")
+    func retryAfterSeconds() {
+        #expect(Labrador.headerRetryDelay(from: Self.response(["Retry-After": "5"])) == 5)
+    }
+
+    @Test("RateLimit-Reset is read when Retry-After is missing")
+    func rateLimitResetSeconds() {
+        #expect(Labrador.headerRetryDelay(from: Self.response(["RateLimit-Reset": "2"])) == 2)
+    }
+
+    @Test("Retry-After wins over RateLimit-Reset")
+    func retryAfterWins() {
+        let response = Self.response(["Retry-After": "4", "RateLimit-Reset": "9"])
+
+        #expect(Labrador.headerRetryDelay(from: response) == 4)
+    }
+
+    @Test("A hint over a minute is capped")
+    func longHintIsCapped() {
+        #expect(Labrador.headerRetryDelay(from: Self.response(["Retry-After": "3600"])) == 60)
+    }
+
+    @Test("A negative hint means now")
+    func negativeHintIsZero() {
+        #expect(Labrador.headerRetryDelay(from: Self.response(["Retry-After": "-5"])) == 0)
+    }
+
+    @Test("No hint falls back to the policy")
+    func noHeaderIsNil() {
+        #expect(Labrador.headerRetryDelay(from: Self.response([:])) == nil)
+        #expect(Labrador.headerRetryDelay(from: Self.response(["Retry-After": "later"])) == nil)
+    }
+
+    @Test("An HTTP date falls back to the policy")
+    func httpDateIsNotParsed() {
+        let response = Self.response(["Retry-After": "Wed, 21 Oct 2015 07:28:00 GMT"])
+
+        #expect(Labrador.headerRetryDelay(from: response) == nil)
+    }
+
+    @Test("The default codes include 500")
+    func serverErrorIsRetryable() {
+        #expect(Labrador.RetryPolicy.defaultRetryCodes.contains(500))
+        #expect(Labrador.RetryPolicy.aggressive.retryCodes.contains(500))
+    }
+}

@@ -177,13 +177,17 @@ public actor Labrador {
         var data: Data?
         var httpURLResponse: HTTPURLResponse?
 
+        // Set when the last response named a wait in a header.
+        var headerRetryDelay: TimeInterval?
+
         for attempt in 0..<maxAttempts {
 
             try Task.checkCancellation()
 
             // Wait before retrying (not on the first attempt)
             if attempt > 0, let effectiveRetryPolicy {
-                let delay = effectiveRetryPolicy.backoff.delay(for: attempt - 1)
+                let delay = headerRetryDelay ?? effectiveRetryPolicy.backoff.delay(for: attempt - 1)
+                headerRetryDelay = nil
                 timber.notice(
                     "Retrying request (attempt \(attempt + 1) of \(maxAttempts)) after \(String(format: "%.0f", delay))s delay: \(urlRequest.url?.absoluteString ?? "unknown")"
                 )
@@ -200,6 +204,7 @@ public actor Labrador {
                 {
                     data = responseData
                     httpURLResponse = response
+                    headerRetryDelay = Self.headerRetryDelay(from: response)
                     lastError = LabradorError(
                         summary: "The server is temporarily unavailable.",
                         details:
@@ -292,6 +297,31 @@ public actor Labrador {
 
         return (data, httpURLResponse)
     }
+
+    // MARK: - Retry Delay
+
+    /// The wait a `Retry-After` or `RateLimit-Reset` header asks for, in
+    /// seconds, or `nil` when neither says. A hint longer than a minute is
+    /// capped: no screen should sit on one request longer than that.
+    ///
+    /// An HTTP-date `Retry-After` isn't read here. The policy's own backoff
+    /// covers it.
+    static func headerRetryDelay(from response: HTTPURLResponse) -> TimeInterval? {
+        let retryAfter = response.value(forHTTPHeaderField: "Retry-After")?
+            .trimmingCharacters(in: .whitespaces)
+        let reset = response.value(forHTTPHeaderField: "RateLimit-Reset")?
+            .trimmingCharacters(in: .whitespaces)
+
+        let seconds =
+            retryAfter.flatMap { TimeInterval($0) }
+            ?? reset.flatMap { TimeInterval($0) }
+
+        guard let seconds else { return nil }
+
+        return min(max(seconds, 0), headerRetryDelayLimit)
+    }
+
+    private static let headerRetryDelayLimit: TimeInterval = 60  // 1 minute
 
     private static func userFacingSummary(for statusCode: StatusCode) -> String {
         switch statusCode {

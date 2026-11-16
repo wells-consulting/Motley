@@ -73,6 +73,9 @@ public extension Labrador {
 
     /// A configurable policy for retrying failed requests due to transient
     /// network errors or retryable HTTP status codes (e.g., 408, 429, 503).
+    ///
+    /// A `Retry-After` or `RateLimit-Reset` header on the failed response
+    /// replaces the computed backoff for that retry.
     struct RetryPolicy: Sendable {
 
         /// The maximum number of retry attempts (not counting the initial request).
@@ -113,6 +116,7 @@ public extension Labrador {
         public static let defaultRetryCodes: Set<Int> = [
             408,  // Request Timeout
             429,  // Too Many Requests
+            500,  // Internal Server Error
             502,  // Bad Gateway
             503,  // Service Unavailable
             504,  // Gateway Timeout
