@@ -53,7 +53,7 @@ One module, `Motley`, one product, and a folder per job under `Sources/`:
 ```sh
 swift build
 swift test
-Scripts/reformat-sorce-code.sh     # swift format, spelled as the file is
+Scripts/reformat-source-code.sh    # swift format
 ```
 
 `.swift-format` is the formatting source of truth, and SwiftLint runs as a

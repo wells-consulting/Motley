@@ -20,7 +20,7 @@ DeveloperOverrides.xcconfig
 .swiftpm/xcode/package.xcworkspace/
 /Package.resolved
 
-# Python in Scripts and Tools
+# Python in Scripts
 __pycache__/
 
 # Credentials
