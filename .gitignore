@@ -31,5 +31,20 @@ __pycache__/
 .claude/*
 !.claude/skills/
 
-# Local scratch space, never shared
-/Sandbox/
+# Local scratch space, never shared: database copies, backups, captures,
+# diagnostics and large media. Notes, scripts and mockups go in
+# Documents/Working, which is tracked.
+/Documents/Sandbox/
+
+# Large inputs kept beside tracked notes and scripts
+/Documents/**/media/
+
+# Backstop for media, archives and databases anywhere under Documents
+/Documents/**/*.mkv
+/Documents/**/*.mp4
+/Documents/**/*.mov
+/Documents/**/*.m4s
+/Documents/**/*.zip
+/Documents/**/*.db
+/Documents/**/*.db-*
+/Documents/**/*.sqlite
