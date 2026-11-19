@@ -36,7 +36,7 @@ description: Use when changing Motley, the shared Swift package: adding or fixin
 ```sh
 swift build
 swift test
-Scripts/reformat-source-code.sh    # swift format
+Scripts/format.sh    # swift format
 ```
 
 SwiftLint runs as a build plugin, so a warning is a failure, not a note.

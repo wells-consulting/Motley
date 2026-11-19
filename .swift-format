@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lineLength": 100,
+  "lineLength": 120,
   "indentation": {
     "spaces": 4
   },
@@ -13,12 +13,12 @@
   },
   "rules": {
     "GroupNumericLiterals": true,
-    "OrderedImports": true,
+    "OrderedImports": false,
     "UseEarlyExits": false,
     "UseExplicitNilCheckInConditions": true,
     "UseLetInEveryBoundCaseVariable": false,
     "UseSingleLinePropertyGetter": true,
     "UseTripleSlashForDocumentationComments": true,
-    "UseWhereClausesInForLoops": false
+    "UseWhereClausesInForLoops": true
   }
 }
