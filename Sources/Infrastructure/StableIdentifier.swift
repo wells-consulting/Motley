@@ -30,8 +30,8 @@ public struct StableIdentifier: Sendable {
         let keeper = Keeper()
         let key = seedKey ?? Self.defaultSeedKey
         let seed = Self.loadOrCreateSeed(with: keeper, forKey: key)
-        let adjective = Self.adjectives[Int((seed >> 32) % UInt64(Self.adjectives.count))]
-        let noun = Self.nouns[Int((seed & 0xFFFF_FFFF) % UInt64(Self.nouns.count))]
+        let adjective = WordList.adjectives[Int((seed >> 32) % UInt64(WordList.adjectives.count))]
+        let noun = WordList.nouns[Int((seed & 0xFFFF_FFFF) % UInt64(WordList.nouns.count))]
         phrase = "\(adjective)_\(noun)"
     }
 
@@ -64,76 +64,4 @@ public struct StableIdentifier: Sendable {
         // swiftlint:enable no_try_question
         return seed
     }
-
-    // MARK: - Word Lists
-
-    private static let adjectives: [String] = [
-        "airy", "amber", "ancient", "arctic", "ashen",
-        "autumn", "azure", "birch", "bleak", "bold",
-        "breezy", "bright", "brisk", "broad", "briny",
-        "bronze", "calm", "cedar", "chalk", "chill",
-        "clear", "cobalt", "cold", "cool", "coral",
-        "crisp", "crystal", "cloudy", "copper", "dark",
-        "dawn", "deep", "dense", "dewy", "distant",
-        "dusky", "dusty", "damp", "dune", "early",
-        "eastern", "elder", "ember", "emerald", "even",
-        "fair", "fern", "fierce", "fixed", "fleet",
-        "flat", "foggy", "fresh", "frosted", "gentle",
-        "glacial", "glad", "glint", "gold", "golden",
-        "grand", "granite", "green", "grey", "hardy",
-        "hazy", "hazel", "heath", "hidden", "high",
-        "hollow", "icy", "idle", "indigo", "inland",
-        "iron", "jade", "keen", "lavender", "leafy",
-        "lean", "larch", "lofty", "long", "low",
-        "lunar", "maple", "mellow", "mild", "mint",
-        "misty", "moody", "mossy", "muted", "narrow",
-        "night", "noble", "north", "oaken", "ochre",
-        "olive", "open", "outer", "pale", "peach",
-        "pine", "plain", "polar", "prime", "pure",
-        "quiet", "rainy", "rapid", "raven", "raw",
-        "real", "remote", "ridge", "rime", "roan",
-        "rocky", "rosy", "royal", "rugged", "rush",
-        "russet", "rustic", "sage", "salt", "sandy",
-        "serene", "shaded", "shale", "sheer", "silver",
-        "slim", "slow", "snowy", "solar", "spare",
-        "stark", "steel", "stern", "still", "stone",
-        "stormy", "strand", "sunlit", "sunny", "swift",
-        "tall", "tawny", "teal", "thorn", "timber",
-        "tranquil", "true", "tundra", "twilight", "upper",
-        "vivid", "warm", "west", "wide", "wild",
-        "wiry", "wispy", "worn", "worthy",
-    ]
-
-    private static let nouns: [String] = [
-        "bank", "basin", "bay", "beacon", "bend",
-        "bluff", "bloom", "bolt", "branch", "brook",
-        "burrow", "butte", "camp", "canyon", "cape",
-        "chain", "channel", "chasm", "cleft", "cliff",
-        "coast", "cove", "crag", "creek", "crest",
-        "crown", "dale", "delta", "draw", "drift",
-        "drop", "dune", "echo", "edge", "falls",
-        "fault", "fen", "ferry", "field", "firth",
-        "fjord", "flats", "flame", "flint", "flow",
-        "foam", "fog", "ford", "forest", "fork",
-        "frost", "gate", "glade", "glen", "gorge",
-        "grain", "grove", "gulf", "gully", "gust",
-        "harbor", "haven", "heath", "hill", "hollow",
-        "horn", "hull", "hurst", "ice", "inlet",
-        "iron", "isle", "keep", "kelp", "key",
-        "knoll", "lagoon", "lake", "ledge", "light",
-        "loch", "loop", "manor", "marsh", "mast",
-        "meadow", "mesa", "mire", "moon", "moor",
-        "moss", "mount", "mouth", "narrows", "neck",
-        "notch", "pass", "peak", "plains", "plateau",
-        "pond", "pool", "port", "range", "ravine",
-        "reef", "ridge", "river", "rock", "root",
-        "run", "rush", "rune", "salt", "shard",
-        "shelf", "shell", "shore", "silt", "sky",
-        "slate", "slough", "sod", "sound", "spire",
-        "spring", "spur", "strand", "stream", "summit",
-        "sun", "swale", "tarn", "tide", "timber",
-        "tor", "trace", "trail", "vale", "valley",
-        "ward", "warden", "watch", "water", "wave",
-        "weir", "wilds", "wood",
-    ]
 }
