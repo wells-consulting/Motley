@@ -179,9 +179,11 @@ Name things what I'd call them out loud.
 - Informal is fine: "Scan button weirdness" is a real subject line I wrote.
 - No colons with a clever tagline ("Match the wire: live-verified stats...").
 - Details, dates and links go in the body, if they're needed at all.
-- If an assistant helped, end the message with a plain line naming it:
-  "Assistance provided by DeepSeek V4.1 Flash 1017." No `Co-Authored-By`
-  trailer and no "Generated with" line, whichever agent wrote the commit.
+- If an assistant helped, end the message with the trailer
+  `Assisted-by: AI (DeepSeek V4.1 Flash 1017)`, after a blank line. The
+  parentheses name the model, because this repo is private; use the readable
+  name, not a provider slug. No `Co-Authored-By` trailer and no "Generated
+  with" line, whichever agent wrote the commit.
 
 ---
 
