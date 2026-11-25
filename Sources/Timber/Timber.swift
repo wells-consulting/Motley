@@ -304,7 +304,6 @@ extension Timber {
     ///    `"MyApp/Networking/APIClient.swift"` → `"Networking/APIClient.swift"`
     /// 2. Strip the file extension
     ///    `"Networking/APIClient.swift"` → `"Networking/APIClient"`
-    /// The file name without its path, used as the default category.
     public static func defaultCategory(from file: String) -> String {
         var name = file
         if let slash = name.firstIndex(of: "/") {
@@ -325,7 +324,6 @@ extension Timber {
     ///     `"Labrador.swift"` → `"Labrador"`
     /// 3. Strip everything up to and including the last `+`, if present
     ///    `"Some+Scene"` → `"Scene"`, `"SomeViewModel"` → `"SomeViewModel"`
-    /// The last path component of a file ID.
     public static func shortFile(_ fileID: String) -> String {
         var name = fileID
         if let slash = name.lastIndex(of: "/") {
