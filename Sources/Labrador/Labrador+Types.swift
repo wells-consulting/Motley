@@ -90,6 +90,7 @@ public extension Labrador {
         /// Foundation.URLError codes that should trigger a retry.
         public let retryURLErrors: Set<Foundation.URLError.Code>
 
+        /// How long to wait between retries.
         public enum Backoff: Sendable {
             /// A constant delay between retries.
             case constant(TimeInterval)
@@ -140,6 +141,15 @@ public extension Labrador {
         /// Five total attempts (four retries) with progressively longer delays.
         public static let aggressive = RetryPolicy(maxRetries: 4, backoff: .fixed([1, 3, 10, 30]))
 
+        /// Creates a retry policy.
+        ///
+        /// - Parameters:
+        ///   - maxRetries: How many times to retry, not counting the first
+        ///     attempt. Defaults to 3.
+        ///   - backoff: How long to wait between attempts. Defaults to
+        ///     exponential backoff.
+        ///   - retryCodes: HTTP status codes that should trigger a retry.
+        ///   - retryURLErrors: `URLError` codes that should trigger a retry.
         public init(
             maxRetries: Int = 3,
             backoff: Backoff = .exponential(),
@@ -193,6 +203,12 @@ public extension Labrador {
         /// Whether to skip the client-level retry policy for this request.
         public let skipRetry: Bool
 
+        /// Creates request options.
+        ///
+        /// - Parameters:
+        ///   - retryPolicy: Replaces the client's policy for this request.
+        ///   - interceptors: Extra interceptors, after the client's.
+        ///   - skipRetry: Skips the client's retry policy for this request.
         public init(
             retryPolicy: RetryPolicy? = nil,
             interceptors: [Interceptor] = [],
@@ -242,6 +258,24 @@ public extension Labrador {
         let tlsTrustPolicy: TLSTrustPolicy
         let maxConnectionsPerHost: Int?
 
+        /// Creates a configuration.
+        ///
+        /// Every parameter has a default, so pass only what this client needs.
+        /// - Parameters:
+        ///   - urlSession: A session to use instead of the one `Labrador`
+        ///     creates.
+        ///   - baseURL: The starting point for relative paths.
+        ///   - headers: Headers to add to every request.
+        ///   - auth: A token to send as a bearer token.
+        ///   - jayson: The coder to use. Defaults to ``Jayson/shared``.
+        ///   - logOptions: What to log.
+        ///   - cachePolicy: How the session uses its cache.
+        ///   - interceptors: Request and response hooks.
+        ///   - retryPolicy: How failed requests are retried.
+        ///   - requestTimeout: The request timeout, in seconds.
+        ///   - resourceTimeout: The resource timeout, in seconds.
+        ///   - tlsTrustPolicy: How server certificates are checked.
+        ///   - maxConnectionsPerHost: The connection limit for one host.
         public init(
             urlSession: URLSession? = nil,
             baseURL: URL? = nil,
@@ -436,6 +470,7 @@ public extension Labrador {
         /// `true` for 5xx status codes.
         public var isServerError: Bool { rawValue >= 500 && rawValue < 600 }
 
+        /// The code and Apple's localized name, like `"404 Not Found"`.
         public var description: String {
             "\(rawValue) " + HTTPURLResponse.localizedString(forStatusCode: rawValue)
         }

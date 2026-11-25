@@ -14,6 +14,7 @@ public enum WordList {
 
     // MARK: - Words
 
+    /// Adjectives, in alphabetical order.
     public static let adjectives: [String] = [
         "airy", "amber", "ancient", "arctic", "ashen",
         "autumn", "azure", "birch", "bleak", "bold",
@@ -51,6 +52,7 @@ public enum WordList {
         "wiry", "wispy", "worn", "worthy",
     ]
 
+    /// Nouns, in alphabetical order.
     public static let nouns: [String] = [
         "bank", "basin", "bay", "beacon", "bend",
         "bluff", "bloom", "bolt", "branch", "brook",

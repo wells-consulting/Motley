@@ -26,6 +26,7 @@ public extension MotleyError {
 
 // MARK: - ErrorKind
 
+/// A rough guess at whether retrying the same call can help.
 public enum ErrorKind: String, Sendable {
 
     /// Transient failures that may succeed on retry (network timeout, temporary

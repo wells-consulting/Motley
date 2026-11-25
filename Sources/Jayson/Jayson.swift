@@ -5,6 +5,11 @@
 
 import Foundation
 
+/// JSON encoding and decoding with the settings the apps share.
+///
+/// ``shared`` is ready to use: ISO 8601 dates, pretty output with sorted keys,
+/// JSON5 input and no null-escape stripping. Make another one when a call needs
+/// different settings.
 public struct Jayson: Sendable {
 
     private let encoder: JSONEncoder
@@ -13,21 +18,48 @@ public struct Jayson: Sendable {
 
     private let log = Timber(formatting: [.omitSourceLocation])
 
+    /// A coder with the default settings.
     public static let shared = Jayson()
 
     // MARK: - Initializers
 
+    /// The settings for a ``Jayson``.
     public struct Configuration: Sendable {
 
+        /// How keys are encoded. Defaults to the property names.
         public let keyEncodingStrategy: JSONEncoder.KeyEncodingStrategy
+
+        /// How dates are encoded. Defaults to ISO 8601.
         public let dateEncodingStrategy: JSONEncoder.DateEncodingStrategy
+
+        /// How the encoded JSON is laid out. Defaults to pretty-printed with
+        /// sorted keys.
         public let outputFormatting: JSONEncoder.OutputFormatting
 
+        /// How keys are decoded. Defaults to the property names.
         public let keyDecodingStrategy: JSONDecoder.KeyDecodingStrategy
+
+        /// How dates are decoded. Defaults to ISO 8601.
         public let dateDecodingStrategy: JSONDecoder.DateDecodingStrategy
+
+        /// Whether the decoder accepts JSON5. Defaults to `true`.
         public let allowsJSON5: Bool
+
+        /// Whether `\u0000` escapes are removed before decoding. Defaults to
+        /// `false`.
         public let stripNullEscapes: Bool
 
+        /// Creates a configuration.
+        ///
+        /// - Parameters:
+        ///   - keyEncodingStrategy: How keys are encoded.
+        ///   - dateEncodingStrategy: How dates are encoded.
+        ///   - outputFormatting: How the encoded JSON is laid out.
+        ///   - keyDecodingStrategy: How keys are decoded.
+        ///   - dateDecodingStrategy: How dates are decoded.
+        ///   - allowsJSON5: Whether the decoder accepts JSON5.
+        ///   - stripNullEscapes: Whether `\u0000` escapes are removed before
+        ///     decoding.
         public init(
             keyEncodingStrategy: JSONEncoder.KeyEncodingStrategy = .useDefaultKeys,
             dateEncodingStrategy: JSONEncoder.DateEncodingStrategy = .iso8601,
@@ -48,9 +80,14 @@ public struct Jayson: Sendable {
             self.stripNullEscapes = stripNullEscapes
         }
 
+        /// The default settings.
         public static let `default` = Configuration()
     }
 
+    /// Creates a coder.
+    ///
+    /// - Parameter configuration: The settings to use. Defaults to
+    ///   ``Configuration/default``.
     public init(configuration: Configuration = .default) {
 
         let encoder = JSONEncoder()
@@ -69,15 +106,13 @@ public struct Jayson: Sendable {
 
     // MARK: - Encode
 
-    /// Encode value to raw data.
+    /// Encodes a value as JSON.
     ///
     /// - Parameters:
-    ///     - value: Value to encode.
-    ///     - userInfo: Additional coding context passed to the encoder.
-    ///
-    /// - Returns: Raw encoded data.
-    ///
-    /// - Throws: `JaysonError` if the value could not be encoded.
+    ///   - value: The value to encode.
+    ///   - userInfo: Extra context for the encoder.
+    /// - Returns: The JSON data.
+    /// - Throws: ``JaysonError`` when the value can't be encoded.
     public func encode<T: Encodable>(
         _ value: T,
         userInfo: [CodingUserInfoKey: any Sendable]? = nil,
@@ -128,16 +163,14 @@ public struct Jayson: Sendable {
 
     // MARK: - Decode
 
-    /// Decode value from raw data.
+    /// Decodes a value from JSON data.
     ///
     /// - Parameters:
-    ///     - type: The type to decode.
-    ///     - data: Raw data, or `nil` which produces an error.
-    ///     - userInfo: Additional coding context passed to the decoder.
-    ///
+    ///   - type: The type to decode.
+    ///   - data: The JSON data. `nil` throws.
+    ///   - userInfo: Extra context for the decoder.
     /// - Returns: The decoded value.
-    ///
-    /// - Throws: `JaysonError` if the data is nil or cannot be decoded.
+    /// - Throws: ``JaysonError`` when the data is missing or can't be decoded.
     public func decode<T: Decodable>(
         _ type: T.Type,
         from data: Data?,
@@ -220,16 +253,14 @@ public struct Jayson: Sendable {
 
     // MARK: - Decode from String
 
-    /// Decode value from a JSON string.
+    /// Decodes a value from a JSON string.
     ///
     /// - Parameters:
-    ///     - type: The type to decode.
-    ///     - string: A JSON string.
-    ///     - userInfo: Additional coding context passed to the decoder.
-    ///
+    ///   - type: The type to decode.
+    ///   - string: The JSON text.
+    ///   - userInfo: Extra context for the decoder.
     /// - Returns: The decoded value.
-    ///
-    /// - Throws: `JaysonError` if the string cannot be decoded.
+    /// - Throws: ``JaysonError`` when the text can't be decoded.
     public func decode<T: Decodable>(
         _ type: T.Type,
         from string: String,
@@ -240,15 +271,13 @@ public struct Jayson: Sendable {
 
     // MARK: - Encode to String
 
-    /// Encode value to a JSON string.
+    /// Encodes a value as a JSON string.
     ///
     /// - Parameters:
-    ///     - value: Value to encode.
-    ///     - userInfo: Additional coding context passed to the encoder.
-    ///
-    /// - Returns: A JSON string representation of the value.
-    ///
-    /// - Throws: `JaysonError` if the value could not be encoded.
+    ///   - value: The value to encode.
+    ///   - userInfo: Extra context for the encoder.
+    /// - Returns: The JSON text.
+    /// - Throws: ``JaysonError`` when the value can't be encoded.
     public func string<T: Encodable>(
         from value: T,
         userInfo: [CodingUserInfoKey: any Sendable]? = nil,
@@ -268,14 +297,12 @@ public struct Jayson: Sendable {
 
     // MARK: - Stringify
 
-    /// Create JSON string from a value, returning `nil` on failure.
+    /// Encodes a value as a JSON string, or returns `nil` when it fails.
     ///
-    /// For a throwing variant, use ``string(from:userInfo:)``.
+    /// For the throwing version, use ``string(from:userInfo:)``.
     ///
-    /// - Parameters:
-    ///     - value: Value to convert.
-    ///
-    /// - Returns: A JSON string, or `nil` if encoding fails.
+    /// - Parameter value: The value to encode.
+    /// - Returns: The JSON text, or `nil`.
     public func stringify(_ value: some Encodable) -> String? {
         do {
             let data = try encoder.encode(value)

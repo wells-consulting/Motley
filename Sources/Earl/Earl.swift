@@ -5,20 +5,19 @@
 
 import Foundation
 
-/// An ergonomic builder to create URLs.
+/// Builds a URL one piece at a time.
 ///
 /// ```swift
-/// let optionalInt: Int? = nil
-/// let nonOptionalInt: Int = 333
+/// let url = try Earl("https://example.com/api")
+///     .path("v1")
+///     .path("stations")
+///     .query("active", true)
+///     .query("limit", 50)
+///     .build()
+/// ```
 ///
-/// // http://myhost.com/api/v1/date?from=333&isActive=true
-/// let url = try Earl("http://myhost.com/api/v1")
-///     .path("date")
-///     .query("date", optionalDate)
-///     .query("from", nonOptionalInt)
-///     .query("to", optionalInt)
-///     .query("isActive", true)
-///     .build()```
+/// The builder keeps the scheme, host, port, user, password, path segments and
+/// query items. A `nil` value is ignored, so an optional can go straight in.
 public final class Earl {
 
     // MARK: - Fields
@@ -35,6 +34,7 @@ public final class Earl {
 
     // MARK: - Computed Properties
 
+    /// The URL text built from the current pieces, without percent-encoding.
     public var absoluteString: String {
 
         var absoluteString = if let scheme { "\(scheme)://" } else { "" }
@@ -63,10 +63,10 @@ public final class Earl {
 
     // MARK: - Initializers
 
-    /// Initialize an empty builder.
+    /// Creates an empty builder.
     ///
-    /// - Returns:
-    ///     - Initialized Earl
+    /// - Parameter dateFormatter: Formats `Date` query values. Defaults to
+    ///   ISO 8601.
     public init(
         dateFormatter: DateFormatter? = nil,
     ) {
@@ -80,21 +80,16 @@ public final class Earl {
         self.dateFormatter = dateFormatter
     }
 
-    /// Initialize a builder from a string.
+    /// Creates a builder from a URL string.
+    ///
+    /// The string needs a scheme and a host. `"https://example.com"` is enough;
+    /// an empty string or one missing either piece throws.
     ///
     /// - Parameters:
-    ///     - string: A valid URL string that includes, at a minimum, a scheme and host.
-    ///     For example, "http://host" is sufficient. The empty string or a string missing a
-    ///     scheme or a host is an error.
-    ///     - dateFormatter: Dates are formatted by default in ISO8601. Provide another formatter
-    ///     to change this behavior.
-    ///
-    /// - Returns:
-    ///     - Initialized Earl
-    ///
-    /// - Throws:
-    ///     - EarlError if the string cannot be parsed by URLComponents or is missing a
-    ///     scheme or host
+    ///   - string: The URL string to start from.
+    ///   - dateFormatter: Formats `Date` query values. Defaults to ISO 8601.
+    /// - Throws: ``EarlError`` when the string can't be parsed or has no scheme
+    ///   or host.
     public init(
         _ string: String,
         dateFormatter: DateFormatter? = nil,
@@ -131,19 +126,12 @@ public final class Earl {
         self.dateFormatter = dateFormatter
     }
 
-    /// Initialize a builder from another URL.
+    /// Creates a builder from a URL.
     ///
     /// - Parameters:
-    ///     - url: A valid URL that includes, at a minimum, a scheme and host.
-    ///     - dateFormatter: Dates are formatted by default in ISO8601. Provide another formatter
-    ///     to change this behavior.
-    ///
-    /// - Returns:
-    ///     - Initialized Earl
-    ///
-    /// - Throws:
-    ///     - EarlError if the string cannot be parsed by URLComponents or is missing
-    ///     a scheme or host
+    ///   - url: The URL to start from.
+    ///   - dateFormatter: Formats `Date` query values. Defaults to ISO 8601.
+    /// - Throws: ``EarlError`` when the URL has no scheme or host.
     public convenience init(
         _ url: URL,
         dateFormatter: DateFormatter? = nil,
@@ -157,11 +145,10 @@ public final class Earl {
 
     // MARK: - Build
 
-    /// Create URL from the current builder state.
+    /// Builds the URL from the current pieces.
     ///
-    /// - Throws:
-    ///     EarlError if a URL cannot be created
-    ///
+    /// - Throws: ``EarlError`` when the scheme or host is missing or the pieces
+    ///   don't make a URL.
     public func build() throws(EarlError) -> URL {
 
         var components = URLComponents()
@@ -361,6 +348,9 @@ public final class Earl {
 
 public extension URL {
 
+    /// Creates a URL from an optional string.
+    ///
+    /// Returns `nil` when the string is `nil` or isn't a valid URL.
     init?(string: String?) {
         if let string, let url = URL(string: string) {
             self = url
@@ -369,6 +359,7 @@ public extension URL {
         }
     }
 
+    /// Creates a URL or throws ``EarlError`` when the string isn't valid.
     static func from(_ string: String) throws(EarlError) -> URL {
 
         guard let url = URL(string: string) else {

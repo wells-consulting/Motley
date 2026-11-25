@@ -7,7 +7,11 @@ import Foundation
 
 /// A type-safe wrapper around an SF Symbol name.
 public struct SFSymbol: RawRepresentable, Sendable, Hashable {
+
+    /// The SF Symbol name, like `"gear"`.
     public let rawValue: String
+
+    /// Creates a symbol from its name.
     public init(rawValue: String) {
         self.rawValue = rawValue
     }

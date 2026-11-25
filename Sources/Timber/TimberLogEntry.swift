@@ -7,16 +7,34 @@ import Foundation
 /// A single persisted log entry produced by Timber.
 public struct TimberLogEntry: Codable, Identifiable, Hashable, Sendable {
 
+    /// A stable ID for the entry.
     public let id: UUID
+
+    /// When the line was logged.
     public let timestamp: Date
+
+    /// How serious the line is.
     public let level: TimberLogLevel
+
+    /// The subsystem the logger was created with.
     public let subsystem: String
+
+    /// The category the line was logged under.
     public let category: String
+
+    /// The message, without the source decoration.
     public let message: String
+
+    /// The file the call came from.
     public let file: String
+
+    /// The function the call came from.
     public let function: String
+
+    /// The line the call came from.
     public let line: UInt
 
+    /// Creates an entry. The logger fills this in; callers rarely do.
     public init(
         id: UUID = .init(),
         timestamp: Date = .now,

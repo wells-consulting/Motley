@@ -7,15 +7,16 @@ import Foundation
 
 /// An async HTTP client built on `URLSession`.
 ///
-/// `Labrador` handles request/response logging, retry logic, interceptors,
-/// and TLS trust policy. All public API is `async` and honours cooperative
-/// cancellation. Configure the client once at creation time via
-/// ``Configuration``, then call the typed helpers declared in the
-/// `Labrador+GET.swift`, `Labrador+POST.swift`, and related files.
+/// `Labrador` handles request and response logging, retries, interceptors and
+/// TLS trust. Configure it once at init, then use the verb methods in
+/// `Labrador+GET.swift` and the related files.
 ///
 /// ```swift
 /// let client = Labrador(configuration: .init(baseURL: serverURL))
-/// let scenes: [Scene] = try await client.get(path: "scenes")
+/// let scenes: [Scene] = try await client.get(
+///     URL(string: "https://example.com/scenes")!,
+///     as: [Scene].self,
+/// )
 /// ```
 public actor Labrador {
 
@@ -372,10 +373,12 @@ public actor Labrador {
 
     // MARK: - Headers
 
+    /// The value of a header the client adds to every request.
     public func header(_ name: String) -> String? {
         additionalHeaders[name]
     }
 
+    /// Sets a header for every request, or removes it when `value` is `nil`.
     public func setHeader(_ name: String, to value: String?) {
         if let value {
             additionalHeaders.updateValue(value, forKey: name)
@@ -384,12 +387,15 @@ public actor Labrador {
         }
     }
 
+    /// Removes a header the client was adding to every request.
     public func removeHeader(_ name: String) {
         additionalHeaders.removeValue(forKey: name)
     }
 
     // MARK: - Helpers
 
+    /// Sets the bearer token for every request, or removes it when the token or
+    /// its access token is `nil`.
     public func setAuth(_ authToken: OAuthToken?) {
         if let accessToken = authToken?.accessToken {
             setHeader("Authorization", to: "Bearer \(accessToken)")
@@ -443,6 +449,7 @@ public actor Labrador {
 
 public extension Labrador {
 
+    /// Sends a `URLRequest` and returns the body and response.
     func data(
         from urlRequest: URLRequest,
         options: RequestOptions? = nil,
@@ -459,6 +466,7 @@ public extension Labrador {
         return try await dispatch(clientRequest, options: options)
     }
 
+    /// Sends a `URLRequest` and decodes the response as `outputType`.
     func request<Output: Decodable>(
         _ urlRequest: URLRequest,
         as outputType: Output.Type,

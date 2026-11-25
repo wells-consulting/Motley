@@ -5,22 +5,22 @@
 
 import Foundation
 
-/// A fully-typed representation of a fuzzy calendar date string.
+/// A date parsed from a string that may only have a year, or a year and month.
 ///
-/// Parses strings like "2024-08-20", "2024-08", or "2024" and stores the
-/// resulting `Date`, `Precision`, and original `rawValue` together. Callers
-/// get precision and display methods directly — no string length inspection
-/// or static utility calls required.
-///
-/// Partial dates default to the earliest representable instant: year-only
-/// becomes January 1, year-month becomes the 1st of that month.
+/// `FuzzyDate` keeps the original string, the parsed date and how precise the
+/// string was. A partial date fills the missing parts with the earliest value:
+/// a year becomes January 1, and a year and month becomes the 1st.
 public struct FuzzyDate: Sendable, Hashable, Comparable, Codable {
 
     // MARK: - Precision
 
+    /// How much of a date the original string had.
     public enum Precision: Int, Sendable, Hashable, Comparable {
+        /// A year, like `"2024"`.
         case yearOnly = 0
+        /// A year and month, like `"2024-06"`.
         case yearMonth = 1
+        /// A full date, with a year, month and day.
         case full = 2
 
         public static func < (lhs: Precision, rhs: Precision) -> Bool {

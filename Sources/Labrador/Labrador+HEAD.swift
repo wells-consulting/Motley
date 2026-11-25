@@ -12,6 +12,7 @@ public extension Labrador {
     /// Performs a HEAD request, returning only the HTTP response (no body).
     /// Useful for checking resource existence or reading response headers
     /// without downloading the body.
+    /// HEADs a URL and returns the response.
     func head(
         _ url: URL,
         headers: [String: String]? = nil,

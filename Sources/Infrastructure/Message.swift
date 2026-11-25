@@ -37,12 +37,9 @@ public struct Message: Hashable, Codable, Sendable {
     /// Creates a text notice.
     ///
     /// - Parameters:
-    ///     - summary: Notice text
-    ///     - details: Verbose and possibly debug text
-    ///     - title: Title
-    ///
-    /// - Returns:
-    ///     Informational notice
+    ///   - summary: The notice text.
+    ///   - details: The longer text, when there is more to say.
+    ///   - title: The title to show above the summary.
     public static func text(
         _ summary: String,
         details: String? = nil,
@@ -54,12 +51,9 @@ public struct Message: Hashable, Codable, Sendable {
     /// Creates an informational notice.
     ///
     /// - Parameters:
-    ///     - summary: Notice text
-    ///     - details: Verbose and possibly debug text
-    ///     - title: Notice title
-    ///
-    /// - Returns:
-    ///     Informational notice
+    ///   - summary: The notice text.
+    ///   - details: The longer text, when there is more to say.
+    ///   - title: The title to show above the summary.
     public static func info(
         _ summary: String,
         details: String? = nil,
@@ -71,12 +65,9 @@ public struct Message: Hashable, Codable, Sendable {
     /// Creates a warning notice.
     ///
     /// - Parameters:
-    ///     - summary: Notice text
-    ///     - details: Verbose and possibly debug text
-    ///     - title: Notice title
-    ///
-    /// - Returns:
-    ///     Warning notice
+    ///   - summary: The notice text.
+    ///   - details: The longer text, when there is more to say.
+    ///   - title: The title to show above the summary.
     public static func notice(
         _ summary: String,
         details: String? = nil,
@@ -88,12 +79,9 @@ public struct Message: Hashable, Codable, Sendable {
     /// Creates an error notice.
     ///
     /// - Parameters:
-    ///     - summary: Notice text
-    ///     - details: Verbose and possibly debug text
-    ///     - title: Notice title
-    ///
-    /// - Returns:
-    ///     Error notice
+    ///   - summary: The notice text.
+    ///   - details: The longer text, when there is more to say.
+    ///   - title: The title to show above the summary.
     public static func error(
         _ summary: String,
         details: String? = nil,
@@ -102,19 +90,16 @@ public struct Message: Hashable, Codable, Sendable {
         .init(summary: summary, details: details, title: title, kind: .error)
     }
 
-    /// Creates an error notice from any `Error`.
+    /// Creates an error notice from any error.
     ///
-    /// Title is inferred as follows: if title is supplied at call site, that
-    /// title is used. If the title is not supplied and the error has a title,
-    /// that title is used. Otherwise, the notice is created without a title.
+    /// The title comes from the call site when you pass one. Otherwise it comes
+    /// from the error when the error has a title, and the notice has no title
+    /// when it doesn't.
     ///
     /// - Parameters:
-    ///     - error: Any error
-    ///     - details: Verbose and possibly debug text
-    ///     - title: Notice title
-    ///
-    /// - Returns:
-    ///     Error notice
+    ///   - error: The error to describe.
+    ///   - details: The longer text, when there is more to say.
+    ///   - title: The title to show above the summary.
     public static func error(
         _ error: any Error,
         details: String? = nil,
@@ -136,6 +121,7 @@ public struct Message: Hashable, Codable, Sendable {
         case notice
         case error
 
+        /// The display title for the kind.
         public var title: String {
             switch self {
             case .text:
@@ -149,6 +135,7 @@ public struct Message: Hashable, Codable, Sendable {
             }
         }
 
+        /// The symbol that goes with the kind.
         public var symbol: SFSymbol? {
             switch self {
             case .text:

@@ -5,6 +5,7 @@
 
 import Foundation
 
+/// A CSV file that couldn't be written.
 public struct CaseyError: MotleyError {
 
     // MARK: - Properties

@@ -29,6 +29,7 @@ public final class SelfSignedCertificateDelegate: NSObject, URLSessionDelegate,
     Sendable
 {
 
+    /// Creates the delegate.
     public override init() {
         super.init()
     }

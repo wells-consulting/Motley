@@ -12,6 +12,7 @@ public extension Labrador {
     /// Performs an OPTIONS request, returning the HTTP response.
     /// Useful for CORS preflight or discovering supported methods
     /// via the `Allow` response header.
+    /// OPTIONS a URL and returns the response.
     func options(
         _ url: URL,
         headers: [String: String]? = nil,

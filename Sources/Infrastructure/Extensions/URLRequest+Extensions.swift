@@ -6,6 +6,7 @@ public import Foundation
 
 extension URLRequest {
 
+    /// The request's headers with sensitive values replaced.
     public func redactedHeaders() -> [String: String] {
         if let allHTTPHeaderFields {
             Self.redactHeaders(allHTTPHeaderFields)
@@ -14,6 +15,7 @@ extension URLRequest {
         }
     }
 
+    /// Replaces values that look like credentials.
     public static func redactHeaders(_ headers: [String: String]) -> [String: String] {
 
         let sensitiveNames: Set<String> = [

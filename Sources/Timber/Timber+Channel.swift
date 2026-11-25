@@ -25,6 +25,7 @@ extension Timber {
 
         // MARK: - Rotation
 
+        /// How the channel's file makes room for new entries.
         public enum Rotation: Sendable {
             /// Renames the current file to `<name>.jsonl.1` (dropping any prior
             /// `.1`) once it reaches `thresholdBytes`, then starts a fresh file.
@@ -38,6 +39,7 @@ extension Timber {
 
         // MARK: - Properties
 
+        /// The channel's name. It becomes the file name.
         public let name: String
         private let fileURL: URL
         private let rotatedFileURL: URL
@@ -98,7 +100,8 @@ extension Timber {
             case .byCountAndAge:
                 raw = buffer
             case .bySize:
-                raw = Self.decodeEntries(at: rotatedFileURL, jayson: jayson)
+                raw =
+                    Self.decodeEntries(at: rotatedFileURL, jayson: jayson)
                     + Self.decodeEntries(at: fileURL, jayson: jayson)
             }
             guard let cap = maxReadEntries else { return raw }

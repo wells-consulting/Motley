@@ -9,6 +9,7 @@ import Foundation
 
 public extension Labrador {
 
+    /// DELETEs a URL with no body and returns the response body.
     func delete(
         _ url: URL,
         headers: [String: String]? = nil,
@@ -27,6 +28,7 @@ public extension Labrador {
         ).0
     }
 
+    /// DELETEs with raw data and decodes the response as `outputType`.
     func delete<Output: Decodable>(
         _ url: URL,
         data: Data,
@@ -51,6 +53,7 @@ public extension Labrador {
         )
     }
 
+    /// DELETEs with a JSON value and returns the response body.
     func delete(
         _ url: URL,
         body input: some Encodable,
@@ -71,6 +74,7 @@ public extension Labrador {
         ).0
     }
 
+    /// DELETEs with a JSON value and decodes the response as `outputType`.
     func delete<Output: Decodable>(
         _ url: URL,
         body input: some Encodable,

@@ -14,8 +14,10 @@ import Foundation
 @propertyWrapper
 public struct DefaultFalse: Codable, Hashable, Sendable {
 
+    /// The flag.
     public var wrappedValue: Bool
 
+    /// Creates a flag. Defaults to `false`.
     public init(wrappedValue: Bool = false) {
         self.wrappedValue = wrappedValue
     }

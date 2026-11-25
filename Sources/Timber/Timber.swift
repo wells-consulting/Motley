@@ -21,14 +21,29 @@ public struct Timber: Sendable {
 
     // MARK: - Formatting
 
+    /// What each log line includes.
     public struct Formatting: OptionSet, Sendable {
+
         public let rawValue: Int
+
+        /// Leaves out the file, function and line.
         public static let omitSourceLocation = Formatting(rawValue: 1 << 0)
+
+        /// Adds a short source location before the message.
         public static let decorateSourceLocation = Formatting(rawValue: 1 << 1)
+
+        /// Leaves out the function name.
         public static let omitFunction = Formatting(rawValue: 1 << 2)
+
+        /// Leaves out the file name.
         public static let omitFile = Formatting(rawValue: 1 << 3)
+
+        /// Leaves out parameter labels.
         public static let omitParameterLabels = Formatting(rawValue: 1 << 4)
+
+        /// Leaves out the line number.
         public static let omitLine = Formatting(rawValue: 1 << 5)
+
         public init(rawValue: Int) {
             self.rawValue = rawValue
         }
@@ -104,7 +119,7 @@ public struct Timber: Sendable {
 
     // MARK: - Logging
 
-    /// Logs a message at the **debug** level.
+    /// Logs a message at the debug level.
     public func debug(
         _ message: String,
         formatting: Formatting? = nil,
@@ -131,7 +146,7 @@ public struct Timber: Sendable {
         )
     }
 
-    /// Logs a message at the **info** level.
+    /// Logs a message at the info level.
     public func info(
         _ message: String,
         formatting: Formatting? = nil,
@@ -158,7 +173,7 @@ public struct Timber: Sendable {
         )
     }
 
-    /// Logs a message at the **notice** level.
+    /// Logs a message at the notice level.
     public func notice(
         _ message: String,
         formatting: Formatting? = nil,
@@ -185,7 +200,7 @@ public struct Timber: Sendable {
         )
     }
 
-    /// Logs a message at the **error** level.
+    /// Logs a message at the error level.
     public func error(
         _ message: String,
         formatting: Formatting? = nil,
@@ -214,7 +229,7 @@ public struct Timber: Sendable {
 
     // MARK: - Convenience
 
-    /// Logs a task-failure message at the **error** level.
+    /// Logs a task-failure message at the error level.
     ///
     /// When `task` is non-nil the message is formatted as
     /// `"\(task) failed with error: \(message)"`; otherwise `message` is
@@ -247,7 +262,7 @@ public struct Timber: Sendable {
         )
     }
 
-    /// Logs an `Error` value at the **error** level, optionally prefixed with a task name.
+    /// Logs an `Error` value at the error level, optionally prefixed with a task name.
     public func error(
         _ error: any Error,
         while task: String? = nil,
@@ -289,6 +304,7 @@ extension Timber {
     ///    `"MyApp/Networking/APIClient.swift"` → `"Networking/APIClient.swift"`
     /// 2. Strip the file extension
     ///    `"Networking/APIClient.swift"` → `"Networking/APIClient"`
+    /// The file name without its path, used as the default category.
     public static func defaultCategory(from file: String) -> String {
         var name = file
         if let slash = name.firstIndex(of: "/") {
@@ -309,6 +325,7 @@ extension Timber {
     ///     `"Labrador.swift"` → `"Labrador"`
     /// 3. Strip everything up to and including the last `+`, if present
     ///    `"Some+Scene"` → `"Scene"`, `"SomeViewModel"` → `"SomeViewModel"`
+    /// The last path component of a file ID.
     public static func shortFile(_ fileID: String) -> String {
         var name = fileID
         if let slash = name.lastIndex(of: "/") {

@@ -15,10 +15,14 @@ public struct Unzipper {
 
     // MARK: - Errors
 
+    /// Why the archive or one of its entries couldn't be read.
     public enum ReadError: Error, LocalizedError, Sendable {
 
+        /// The data isn't a zip archive.
         case notAZipArchive
+        /// The entry uses compression this reader doesn't handle.
         case unsupportedEntry(String)
+        /// The entry's data is damaged.
         case corruptEntry(String)
 
         public var errorDescription: String? {
@@ -49,6 +53,9 @@ public struct Unzipper {
 
     // MARK: - Initializer
 
+    /// Reads the archive's directory.
+    ///
+    /// - Throws: ``ReadError/notAZipArchive`` when the data isn't a zip.
     public init(data: Data) throws {
         self.data = data
         entries = try Self.centralDirectory(of: data)
@@ -98,8 +105,9 @@ public struct Unzipper {
         }
 
         let earliest = max(0, data.count - 22 - 65_535)
-        guard let end = stride(from: data.count - 22, through: earliest, by: -1)
-            .first(where: { data.uint32(at: $0) == 0x0605_4B50 })
+        guard
+            let end = stride(from: data.count - 22, through: earliest, by: -1)
+                .first(where: { data.uint32(at: $0) == 0x0605_4B50 })
         else {
             throw ReadError.notAZipArchive
         }
@@ -120,10 +128,12 @@ public struct Unzipper {
             guard data.count >= offset + 46 + nameLength else {
                 throw ReadError.notAZipArchive
             }
-            guard let name = String(
-                bytes: data.subdata(in: (offset + 46)..<(offset + 46 + nameLength)),
-                encoding: .utf8,
-            ) else {
+            guard
+                let name = String(
+                    bytes: data.subdata(in: (offset + 46)..<(offset + 46 + nameLength)),
+                    encoding: .utf8,
+                )
+            else {
                 throw ReadError.notAZipArchive
             }
 

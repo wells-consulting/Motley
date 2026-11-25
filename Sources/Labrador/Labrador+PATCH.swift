@@ -9,6 +9,7 @@ import Foundation
 
 public extension Labrador {
 
+    /// PATCHes a URL with no body and returns the response body.
     func patch(
         _ url: URL,
         headers: [String: String]? = nil,
@@ -27,6 +28,7 @@ public extension Labrador {
         ).0
     }
 
+    /// PATCHes raw data and decodes the response as `outputType`.
     func patch<Output: Decodable>(
         _ url: URL,
         data: Data,
@@ -51,6 +53,7 @@ public extension Labrador {
         )
     }
 
+    /// PATCHes a JSON value and returns the response body.
     func patch(
         _ url: URL,
         body input: some Encodable,
@@ -71,6 +74,7 @@ public extension Labrador {
         ).0
     }
 
+    /// PATCHes a JSON value and decodes the response as `outputType`.
     func patch<Output: Decodable>(
         _ url: URL,
         body input: some Encodable,

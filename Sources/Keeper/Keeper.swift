@@ -30,12 +30,17 @@ public struct Keeper: Sendable, SecureStoring {
 
     // MARK: - Operations
 
+    /// Whether anything is stored under `key`.
     public func exists(key: String) -> Bool {
         let query = baseQuery(for: key)
         let status = SecItemCopyMatching(query as CFDictionary, nil)
         return status == errSecSuccess
     }
 
+    /// The value under `key`.
+    ///
+    /// - Throws: ``KeeperError`` when the item is missing, the keychain can't
+    ///   be read, or the stored data doesn't decode.
     public func load<T: Codable>(_ type: T.Type, forKey key: String) throws -> T {
 
         var query = baseQuery(for: key)
@@ -60,6 +65,10 @@ public struct Keeper: Sendable, SecureStoring {
         }
     }
 
+    /// Stores a value under `key`, replacing what's there.
+    ///
+    /// - Throws: ``KeeperError`` when the value can't be encoded or the
+    ///   keychain refuses the write.
     public func save(_ value: some Codable, forKey key: String) throws {
 
         let data: Data
@@ -87,6 +96,11 @@ public struct Keeper: Sendable, SecureStoring {
         }
     }
 
+    /// Removes the value under `key`.
+    ///
+    /// Does nothing when there's no item to remove.
+    ///
+    /// - Throws: ``KeeperError`` when the keychain refuses the delete.
     public func delete(key: String) throws {
 
         let query = baseQuery(for: key)

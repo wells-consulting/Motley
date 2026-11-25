@@ -51,11 +51,12 @@ public extension Timber {
         /// The closure stays on the caller's actor, so it can call back into
         /// whatever started the work.
         nonisolated(nonsending)
-        public static func withValue<T>(
-            _ value: String,
-            detail: Detail = .everyCall,
-            operation: () async throws -> T,
-        ) async rethrows -> T {
+            public static func withValue<T>(
+                _ value: String,
+                detail: Detail = .everyCall,
+                operation: () async throws -> T,
+            ) async rethrows -> T
+        {
             try await $current.withValue(value) {
                 try await $detail.withValue(detail) {
                     try await operation()
@@ -68,10 +69,11 @@ public extension Timber {
         /// `"[energy > forecast-warmup] dailyForecast"`. Keeps the enclosing
         /// scope's ``detail``.
         nonisolated(nonsending)
-        public static func withPurpose<T>(
-            _ purpose: String,
-            operation: () async throws -> T,
-        ) async rethrows -> T {
+            public static func withPurpose<T>(
+                _ purpose: String,
+                operation: () async throws -> T,
+            ) async rethrows -> T
+        {
             let value = current.map { "\($0) > \(purpose)" } ?? purpose
             return try await withValue(value, detail: detail, operation: operation)
         }

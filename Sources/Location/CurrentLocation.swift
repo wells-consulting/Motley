@@ -17,7 +17,9 @@ public enum CurrentLocationAuthorization: Equatable, Sendable {
 /// Why a location fix didn't arrive.
 public enum CurrentLocationError: Error, Equatable, Sendable {
 
+    /// The app isn't allowed to read the location.
     case denied
+    /// No fix arrived before the deadline.
     case unavailable
 }
 
@@ -28,8 +30,10 @@ public enum CurrentLocationError: Error, Equatable, Sendable {
 /// device with location services off can't hang the caller.
 public struct CurrentLocation: Sendable {
 
+    /// Creates a location reader.
     public init() {}
 
+    /// Whether the app may read the device's location.
     public var authorization: CurrentLocationAuthorization {
         switch CLLocationManager().authorizationStatus {
         case .notDetermined:

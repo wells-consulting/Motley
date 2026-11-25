@@ -5,16 +5,27 @@
 
 import Foundation
 
+/// A URL the builder couldn't make.
 public struct EarlError: MotleyError {
 
     // MARK: - Properties
 
+    /// A short description of what went wrong.
     public let summary: String
+
+    /// The string and the specific problem.
     public let details: String?
+
+    /// The error underneath, when there is one.
     public let underlyingError: (any Error)?
+
+    /// URL problems are configuration errors.
     public var errorKind: ErrorKind { .configuration }
 
+    /// The string the builder started with.
     public let urlString: String?
+
+    /// The parsed pieces, when parsing got that far.
     public let urlComponents: URLComponents?
 
     // MARK: - Lifecycle

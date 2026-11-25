@@ -9,6 +9,7 @@ import Foundation
 /// fail to decode so one corrupt entry doesn't poison the entire collection.
 public struct SafeDecodable<T: Decodable>: Decodable {
 
+    /// The decoded value, or `nil` when the entry failed.
     public let value: T?
 
     public init(from decoder: any Decoder) throws {

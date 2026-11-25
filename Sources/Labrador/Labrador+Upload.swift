@@ -9,12 +9,18 @@ import Foundation
 
 public extension Labrador {
 
+    /// What an upload reports as it runs.
     enum UploadEvent: Sendable {
+        /// Some bytes were sent. `totalBytes` is `nil` when the size isn't
+        /// known.
         case progress(bytesSent: Int64, totalBytes: Int64?)
+        /// The upload finished with the response body.
         case completed(Data)
+        /// The upload failed.
         case failed(any Error)
     }
 
+    /// Uploads raw data and reports progress as it goes.
     func upload(
         _ url: URL,
         data body: Data,
@@ -76,6 +82,7 @@ public extension Labrador {
         }
     }
 
+    /// Uploads a multipart form and reports progress as it goes.
     func upload(
         _ url: URL,
         form: MultipartForm,
@@ -95,6 +102,7 @@ public extension Labrador {
         )
     }
 
+    /// Uploads a URL-encoded form and reports progress as it goes.
     func upload(
         _ url: URL,
         form: URLEncodedForm,

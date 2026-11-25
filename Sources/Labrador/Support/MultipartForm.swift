@@ -11,18 +11,25 @@ private protocol MultipartFormContent {
     func encode(into data: NSMutableData)
 }
 
+/// Builds a `multipart/form-data` body.
+///
+/// Add fields with the `addingField` methods, then pass the form to a
+/// `Labrador` request or use ``data`` as the body.
 public final class MultipartForm {
 
     static let boundary = "AEE829AB-96ED-4566-9801-BBD497C33F7E"
 
     private var contents = [any MultipartFormContent]()
 
+    /// Whether the form has no fields.
     public var isEmpty: Bool { contents.isEmpty }
 
+    /// A log-friendly summary of the fields.
     public var summary: String {
         contents.compactMap(\.summary).joined(separator: "\n")
     }
 
+    /// The encoded body.
     public var data: Data {
         let data = NSMutableData()
 
@@ -36,10 +43,12 @@ public final class MultipartForm {
         return data as Data
     }
 
+    /// Whether any field name starts with this prefix.
     public func contains(_ name: String) -> Bool {
         !contents.filter { $0.name.hasPrefix(name) }.isEmpty
     }
 
+    /// The string value for a field, or `nil` when the field isn't there.
     public func getStringContentWithName(_ name: String) -> String? {
         if let content = contents.first(where: { $0 is StringContent && $0.name == name }) {
             (content as? StringContent)?.value
@@ -48,36 +57,43 @@ public final class MultipartForm {
         }
     }
 
+    /// Adds a Bool as `"true"` or `"false"`.
     public func addingField(name: String, value: Bool) -> Self {
         contents.append(StringContent(value: value ? "true" : "false", name: name))
         return self
     }
 
+    /// Adds a string.
     public func addingField(name: String, value: String) -> Self {
         contents.append(StringContent(value: value, name: name))
         return self
     }
 
+    /// Adds an Int as text.
     public func addingField(name: String, value: Int) -> Self {
         contents.append(StringContent(value: String(value), name: name))
         return self
     }
 
+    /// Adds an Int32 as text.
     public func addingField(name: String, value: Int32) -> Self {
         contents.append(StringContent(value: String(value), name: name))
         return self
     }
 
+    /// Adds an Int64 as text.
     public func addingField(name: String, value: Int64) -> Self {
         contents.append(StringContent(value: String(value), name: name))
         return self
     }
 
+    /// Adds a Double as text.
     public func addingField(name: String, value: Double) -> Self {
         contents.append(StringContent(value: String(value), name: name))
         return self
     }
 
+    /// Adds a Date in ISO 8601.
     public func addingField(name: String, value: Date) -> Self {
         contents.append(StringContent(value: value.formatted(.iso8601), name: name))
         return self
@@ -89,16 +105,19 @@ public final class MultipartForm {
         return self
     }
 
+    /// The old spelling of the UUID field method.
     @available(*, deprecated, renamed: "addingField(name:value:)")
     public func addindField(name: String, value: UUID) -> Self {
         addingField(name: name, value: value)
     }
 
+    /// Adds bytes as a file with this name.
     public func addingField(name: String, value: Data, savingTo filename: String) -> Self {
         contents.append(FileContent(value: value, name: name, filename: filename))
         return self
     }
 
+    /// Adds JSON data as a field.
     public func addingField(name: String, value: Data) throws -> Self {
         try contents.append(JSONContent(value: value, name: name))
         return self

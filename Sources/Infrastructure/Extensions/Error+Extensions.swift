@@ -29,6 +29,15 @@ public extension Error {
 
     // MARK: - Describe
 
+    /// The error as a multi-line report.
+    ///
+    /// Use this in a diagnostics screen or a support email. What it includes is
+    /// up to `options`.
+    ///
+    /// - Parameters:
+    ///   - options: Which parts to include.
+    ///   - depth: How far down the underlying errors to indent. Callers leave
+    ///     this at zero.
     func describe(
         options: ErrorDescriptionOptions,
         depth: Int = 0,
@@ -116,6 +125,7 @@ public extension Error {
 
 // MARK: - ErrorDescriptionOptions
 
+/// What `Error.describe(options:depth:)` includes in its report.
 public struct ErrorDescriptionOptions: OptionSet, Sendable {
 
     public let rawValue: Int
@@ -123,11 +133,22 @@ public struct ErrorDescriptionOptions: OptionSet, Sendable {
         self.rawValue = rawValue
     }
 
+    /// Include the error's details.
     public static let details: Self = .init(rawValue: 1 << 2)
+
+    /// Include the error underneath the top one.
     public static let underlyingError: Self = .init(rawValue: 1 << 3)
+
+    /// Include the `NSError` domain and code.
     public static let nsError: Self = .init(rawValue: 1 << 5)
+
+    /// Just the summary.
     public static let minimal: Self = []
-    public static let basic: Self = [ .details]
+
+    /// The summary and details.
+    public static let basic: Self = [.details]
+
+    /// Everything.
     public static let verbose: Self = [
         .details,
         .underlyingError,

@@ -9,6 +9,7 @@ import Foundation
 
 public extension Labrador {
 
+    /// PUTs to a URL with no body and returns the response body.
     func put(
         _ url: URL,
         headers: [String: String]? = nil,
@@ -27,6 +28,7 @@ public extension Labrador {
         ).0
     }
 
+    /// PUTs raw data and decodes the response as `outputType`.
     func put<Output: Decodable>(
         _ url: URL,
         data: Data,
@@ -51,6 +53,7 @@ public extension Labrador {
         )
     }
 
+    /// PUTs a JSON value and returns the response body.
     func put(
         _ url: URL,
         body input: some Encodable,
@@ -71,6 +74,7 @@ public extension Labrador {
         ).0
     }
 
+    /// PUTs a JSON value and decodes the response as `outputType`.
     func put<Output: Decodable>(
         _ url: URL,
         body input: some Encodable,

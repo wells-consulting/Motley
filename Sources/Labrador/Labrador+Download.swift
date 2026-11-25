@@ -9,12 +9,21 @@ import Foundation
 
 extension Labrador {
 
+    /// What a download reports as it runs.
     public enum DownloadEvent: Sendable {
+        /// Some bytes arrived. `totalBytes` is `nil` when the server didn't
+        /// say how large the body is.
         case progress(bytesReceived: Int64, totalBytes: Int64?)
+        /// The download finished with the whole body.
         case completed(Data)
+        /// The download failed.
         case failed(any Error)
     }
 
+    /// Downloads a URL into memory and reports progress as it goes.
+    ///
+    /// Use ``downloadToFile(_:resumeData:timeout:progressThrottleInterval:logContext:)``
+    /// for a file too large to hold in memory.
     public func downloadInMemory(
         _ url: URL,
         headers: [String: String]? = nil,
@@ -70,16 +79,29 @@ extension Labrador {
 
     // MARK: - File Download
 
+    /// What a file download reports as it runs.
     public enum FileDownloadEvent: Sendable {
+        /// Some bytes were written. `totalBytes` and `speed` are `nil` when the
+        /// server or the system doesn't provide them.
         case progress(bytesWritten: Int64, totalBytes: Int64?, speed: Double?)
+        /// The download finished at this temporary URL. Move the file before
+        /// the system clears the temporary directory.
         case completed(tempFileURL: URL)
+        /// The download was canceled, with resume data when the server supports
+        /// it.
         case cancelled(resumeData: Data?)
+        /// The download failed.
         case failed(any Error)
     }
 
+    /// A running file download.
     public struct FileDownloadTransfer: Sendable {
+        /// The download's events.
         public let events: AsyncStream<FileDownloadEvent>
+        /// Cancels the download and returns resume data, or `nil` when the
+        /// server doesn't support it.
         public let cancelProducingResumeData: @Sendable () async -> Data?
+        /// Cancels the download without asking for resume data.
         public let cancel: @Sendable () -> Void
     }
 

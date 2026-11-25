@@ -5,6 +5,11 @@
 
 import Foundation
 
+/// Builds a zip archive from files in a temporary directory.
+///
+/// Add files and directories, then call ``zipit()``. The archive is written to
+/// the temporary directory, so move or copy it before the system clears that
+/// directory.
 public struct Zipper {
 
     private let filename: String
@@ -12,6 +17,7 @@ public struct Zipper {
 
     private static let log = Timber()
 
+    /// Creates a zipper for an archive with this name.
     public init(filename: String) {
         self.filename = filename
         let fm = FileManager.default
@@ -30,21 +36,27 @@ public struct Zipper {
         stagingDir.appendingPathComponent(filename)
     }
 
+    /// Adds bytes as a file in the archive.
     public func addData(_ data: Data, as filename: String) throws {
         let url = fileURL(for: filename)
         try data.write(to: url, options: .atomic)
     }
 
+    /// Adds text as a UTF-8 file in the archive.
     public func addText(_ text: String, as filename: String) throws {
         let url = fileURL(for: filename)
         try text.write(to: url, atomically: true, encoding: .utf8)
     }
 
+    /// Adds a directory and everything under it.
     public func addDirectory(contentsOf sourceDir: URL, as name: String) throws {
         let destDir = stagingDir.appending(path: name, directoryHint: .isDirectory)
         try FileManager.default.copyItem(at: sourceDir, to: destDir)
     }
 
+    /// Builds the archive and removes the staging directory.
+    ///
+    /// - Returns: The archive's URL, or `nil` if the copy failed.
     public func zipit() throws -> URL? {
 
         let fm = FileManager.default

@@ -46,13 +46,14 @@ public extension Timber {
 
     /// The async form that returns nothing.
     nonisolated(nonsending)
-    func `do`(
-        _ task: String,
-        file: String = #fileID,
-        function: String = #function,
-        line: UInt = #line,
-        _ operation: () async throws -> Void,
-    ) async {
+        func `do`(
+            _ task: String,
+            file: String = #fileID,
+            function: String = #function,
+            line: UInt = #line,
+            _ operation: () async throws -> Void,
+        ) async
+    {
         do {
             try await operation()
         } catch is CancellationError {
@@ -64,13 +65,14 @@ public extension Timber {
 
     /// The async form that returns a value.
     nonisolated(nonsending)
-    func `do`<T>(
-        _ task: String,
-        file: String = #fileID,
-        function: String = #function,
-        line: UInt = #line,
-        _ operation: () async throws -> T?,
-    ) async -> T? {
+        func `do`<T>(
+            _ task: String,
+            file: String = #fileID,
+            function: String = #function,
+            line: UInt = #line,
+            _ operation: () async throws -> T?,
+        ) async -> T?
+    {
         do {
             return try await operation()
         } catch is CancellationError {

@@ -14,14 +14,17 @@ public final class InMemoryKeeper: SecureStoring {
 
     private let storage = Mutex<[String: Data]>([:])
 
+    /// Creates an empty store.
     public init() {}
 
     // MARK: - SecureStoring
 
+    /// Whether anything is stored under `key`.
     public func exists(key: String) -> Bool {
         storage.withLock { $0[key] != nil }
     }
 
+    /// The value under `key`.
     public func load<T: Codable>(_ type: T.Type, forKey key: String) throws -> T {
         guard let data = storage.withLock({ $0[key] }) else {
             throw KeeperError.itemNotFound(key: key)
@@ -34,6 +37,7 @@ public final class InMemoryKeeper: SecureStoring {
         }
     }
 
+    /// Stores a value under `key`.
     public func save(_ value: some Codable, forKey key: String) throws {
         do {
             let data = try Jayson.shared.encode(value)
@@ -43,6 +47,7 @@ public final class InMemoryKeeper: SecureStoring {
         }
     }
 
+    /// Removes the value under `key`.
     public func delete(key: String) throws {
         _ = storage.withLock { $0.removeValue(forKey: key) }
     }

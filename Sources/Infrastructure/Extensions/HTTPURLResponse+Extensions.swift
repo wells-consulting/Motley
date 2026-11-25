@@ -25,6 +25,7 @@ extension HTTPURLResponse {
             }
     }
 
+    /// Replaces a header value that may hold a credential.
     public func redactResponseHeader(name: String, value: String) -> String {
 
         let lowerName = name.lowercased()

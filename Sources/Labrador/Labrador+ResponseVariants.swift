@@ -11,6 +11,7 @@ import Foundation
 /// giving callers access to response headers, status codes, etc.
 public extension Labrador {
 
+    /// GETs a URL and returns the decoded value with the HTTP response.
     func getWithResponse<Output: Decodable>(
         _ url: URL,
         as outputType: Output.Type,
@@ -41,6 +42,7 @@ public extension Labrador {
         )
     }
 
+    /// POSTs a JSON value and returns the decoded value with the HTTP response.
     func postWithResponse<Output: Decodable>(
         _ url: URL,
         body input: some Encodable,
@@ -79,6 +81,7 @@ public extension Labrador {
         )
     }
 
+    /// PUTs a JSON value and returns the decoded value with the HTTP response.
     func putWithResponse<Output: Decodable>(
         _ url: URL,
         body input: some Encodable,
@@ -117,6 +120,7 @@ public extension Labrador {
         )
     }
 
+    /// PATCHes a JSON value and returns the decoded value with the HTTP response.
     func patchWithResponse<Output: Decodable>(
         _ url: URL,
         body input: some Encodable,
@@ -155,6 +159,8 @@ public extension Labrador {
         )
     }
 
+    /// DELETEs with a JSON value and returns the decoded value with the HTTP
+    /// response.
     func deleteWithResponse<Output: Decodable>(
         _ url: URL,
         body input: some Encodable,
@@ -195,7 +201,7 @@ public extension Labrador {
 
     // MARK: - Data Response Variants
 
-    /// POST raw data, returning the response with raw `Data`.
+    /// POSTs raw data and returns the response with the raw body.
     func postWithResponse(
         _ url: URL,
         data: Data,
@@ -227,7 +233,7 @@ public extension Labrador {
         return try await requestWithDataResponse(clientRequest)
     }
 
-    /// POST a multipart form, returning the response with raw `Data`.
+    /// POSTs a multipart form and returns the response with the raw body.
     func postWithResponse(
         _ url: URL,
         form: MultipartForm,
@@ -253,7 +259,7 @@ public extension Labrador {
         return try await requestWithDataResponse(clientRequest)
     }
 
-    /// POST a URL-encoded form, returning the response with raw `Data`.
+    /// POSTs a URL-encoded form and returns the response with the raw body.
     func postWithResponse(
         _ url: URL,
         form: URLEncodedForm,

@@ -7,18 +7,22 @@ import Foundation
 
 extension Range<Date> {
 
+    /// The range as a short label: a day, a month, a year or two timestamps.
     public var displayString: String {
         PrivateUtils.displayString(startDate: lowerBound, endDate: upperBound)
     }
 
+    /// The two ends in ISO 8601, joined with `..<`.
     public var debugString: String {
         "\(lowerBound.formatted(.iso8601)) ..< \(upperBound.formatted(.iso8601))"
     }
 
+    /// The length in milliseconds, formatted for a log line.
     public var msDurationString: String {
         Date.msDurationString(from: lowerBound, to: upperBound)
     }
 
+    /// The length, formatted for a log line.
     public var durationString: String {
         Date.durationString(from: lowerBound, to: upperBound)
     }
@@ -26,18 +30,22 @@ extension Range<Date> {
 
 extension ClosedRange<Date> {
 
+    /// The range as a short label: a day, a month, a year or two timestamps.
     public var displayString: String {
         PrivateUtils.displayString(startDate: lowerBound, endDate: upperBound)
     }
 
+    /// The two ends in ISO 8601, joined with `...`.
     public var debugString: String {
         "\(lowerBound.formatted(.iso8601)) ... \(upperBound.formatted(.iso8601))"
     }
 
+    /// The length in milliseconds, formatted for a log line.
     public var msDurationString: String {
         Date.msDurationString(from: lowerBound, to: upperBound)
     }
 
+    /// The length, formatted for a log line.
     public var durationString: String {
         Date.durationString(from: lowerBound, to: upperBound.addingTimeInterval(-1.0))
     }

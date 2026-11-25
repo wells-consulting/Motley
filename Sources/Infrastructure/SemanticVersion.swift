@@ -5,12 +5,23 @@
 
 import Foundation
 
-/// Parses a semantic version string like `"v0.27.1"` or `"0.27.1"`
-/// into its components.
+/// A version with major, minor and patch numbers.
+///
+/// ```swift
+/// let version = SemanticVersion("v1.2.3")
+/// version?.major   // 1
+/// version?.minor   // 2
+/// version?.patch   // 3
+/// ```
 public struct SemanticVersion: Sendable, Comparable {
 
+    /// The major version.
     public let major: Int
+
+    /// The minor version.
     public let minor: Int
+
+    /// The patch version. Defaults to zero when the string leaves it out.
     public let patch: Int
 
     /// Parses a version string, stripping any leading non-digit prefix (e.g. `"v"`).

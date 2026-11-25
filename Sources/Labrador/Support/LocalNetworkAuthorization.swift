@@ -20,6 +20,7 @@
     import Foundation
     import Network
 
+    /// Triggers and checks the local network permission on iOS.
     public struct LocalNetworkAuthorization {
 
         private static let log = Timber(

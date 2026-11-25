@@ -5,6 +5,7 @@
 
 import Foundation
 
+/// A keychain operation that failed.
 public struct KeeperError: MotleyError {
 
     // MARK: - Properties

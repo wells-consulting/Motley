@@ -9,6 +9,7 @@ import Foundation
 /// time.
 public struct TimeoutError: Error, LocalizedError, Sendable, Equatable {
 
+    /// How long the work was given.
     public let duration: Duration
 
     public var errorDescription: String? {

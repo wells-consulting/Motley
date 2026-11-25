@@ -6,22 +6,27 @@ import Foundation
 
 extension URL: LogTextProviding {
 
+    /// Adds a path component.
     public func appendingPath(_ name: String) -> URL {
         appendingPathComponent(name)
     }
 
+    /// Adds a path component and marks it as a file.
     public func appendingFile(_ name: String) -> URL {
         appendingPathComponent(name, isDirectory: false)
     }
 
+    /// Adds a path component and marks it as a directory.
     public func appendingDir(_ name: String) -> URL {
         appendingPathComponent(name, isDirectory: true)
     }
 
+    /// The last two path components.
     public var briefPath: String {
         Array(pathComponents.suffix(2)).joined(separator: "/")
     }
 
+    /// The path with the app container's ID, for a log line.
     public var briefContainerFilePath: String {
 
         guard isFileURL else { return briefPath }
@@ -41,10 +46,12 @@ extension URL: LogTextProviding {
         return "\(containerID)/\(relativeSuffix)"
     }
 
+    /// The redacted URL.
     public var logText: String {
         redacted()
     }
 
+    /// The URL with sensitive query values replaced, so it can go in a log.
     public func redacted() -> String {
         guard
             var components = URLComponents(

@@ -5,11 +5,16 @@
 
 import Foundation
 
+/// How serious a log line is.
 public enum TimberLogLevel: String, Comparable, Codable, Sendable {
 
+    /// Detail for development.
     case debug
+    /// Something happened that may be useful later.
     case info
+    /// Something unusual, but not a failure.
     case notice
+    /// A failure.
     case error
 
     private var severity: Int {

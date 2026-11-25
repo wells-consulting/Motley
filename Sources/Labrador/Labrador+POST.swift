@@ -9,6 +9,7 @@ import Foundation
 
 public extension Labrador {
 
+    /// POSTs to a URL with no body and returns the response body.
     func post(
         _ url: URL,
         headers: [String: String]? = nil,
@@ -27,6 +28,7 @@ public extension Labrador {
         ).0
     }
 
+    /// POSTs raw data and returns the response body.
     func post(
         _ url: URL,
         data: Data,
@@ -58,6 +60,7 @@ public extension Labrador {
         return try await dispatch(clientRequest).0
     }
 
+    /// POSTs raw data and decodes the response as `outputType`.
     func post<Output: Decodable>(
         _ url: URL,
         data: Data,
@@ -82,6 +85,7 @@ public extension Labrador {
         )
     }
 
+    /// POSTs a JSON value and returns the response body.
     func post(
         _ url: URL,
         body input: some Encodable,
@@ -102,6 +106,7 @@ public extension Labrador {
         ).0
     }
 
+    /// POSTs a JSON value and decodes the response as `outputType`.
     func post<Output: Decodable>(
         _ url: URL,
         body input: some Encodable,
@@ -128,6 +133,7 @@ public extension Labrador {
 
     // MARK: MultipartForm
 
+    /// POSTs a multipart form and returns the response body.
     func post(
         _ url: URL,
         form: MultipartForm,
@@ -153,6 +159,7 @@ public extension Labrador {
         return try await dispatch(clientRequest).0
     }
 
+    /// POSTs a multipart form and decodes the response as `outputType`.
     func post<Output: Decodable>(
         _ url: URL,
         form: MultipartForm,
@@ -186,6 +193,7 @@ public extension Labrador {
 
     // MARK: URLEncodedForm
 
+    /// POSTs a URL-encoded form and returns the response body.
     func post(
         _ url: URL,
         form: URLEncodedForm,
@@ -211,6 +219,7 @@ public extension Labrador {
         return try await dispatch(clientRequest).0
     }
 
+    /// POSTs a URL-encoded form and decodes the response as `outputType`.
     func post<Output: Decodable>(
         _ url: URL,
         form: URLEncodedForm,

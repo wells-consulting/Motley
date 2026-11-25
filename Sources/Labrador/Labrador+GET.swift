@@ -9,6 +9,7 @@ import Foundation
 
 public extension Labrador {
 
+    /// GETs a URL and returns the body, or `nil` when there is none.
     func get(
         _ url: URL,
         headers: [String: String]? = nil,
@@ -29,6 +30,7 @@ public extension Labrador {
         return data
     }
 
+    /// GETs a URL and decodes the response as `outputType`.
     func get<Output: Decodable>(
         _ url: URL,
         as outputType: Output.Type,

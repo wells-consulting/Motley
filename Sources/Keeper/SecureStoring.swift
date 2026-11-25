@@ -17,7 +17,9 @@ public protocol SecureStoring: Sendable {
     /// - Throws: `KeeperError.itemNotFound` when there's nothing there.
     func load<T: Codable>(_ type: T.Type, forKey key: String) throws -> T
 
+    /// Stores a value under `key`, replacing what's there.
     func save(_ value: some Codable, forKey key: String) throws
 
+    /// Removes the value under `key`.
     func delete(key: String) throws
 }
