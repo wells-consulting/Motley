@@ -16,7 +16,7 @@ prove a change, and how to tag and re-pin it. This file is the rules.
 One module, `Motley`, one product, and a folder per job under `Sources/`:
 
 - `Labrador` — the async HTTP client. Retry, interceptors, TLS trust policy.
-- `Earl` — `urlBuilder()`.
+- `Earl` — the URL builder.
 - `Jayson` — JSON, with `DefaultFalse` and `SafeDecodable`.
 - `Timber` — logging, channels and file rotation.
 - `Casey` — CSV.
@@ -58,3 +58,34 @@ Scripts/format.sh    # swift format
 
 `.swift-format` is the formatting source of truth, and SwiftLint runs as a
 build plugin, so a warning is a failure.
+
+## Doc comments
+
+The public API is also the documentation site, so a doc comment is reference
+material, not conversation.
+
+- A summary sentence first. Add a second paragraph only for a unit, a fallback
+  or a gotcha.
+- `- Parameter` and `- Throws` on public methods and initializers where they
+  add something. Skip `- Returns` when the summary already says it.
+- One short example when the call is easier to show than to describe.
+- If the name says it, skip the property. `rawValue` and Codable boilerplate
+  stay blank.
+
+## Documentation
+
+`Sources/Motley.docc/` holds the landing page and the guides, and `.spi.yml`
+names the documentation target. Build it before a tag:
+
+```sh
+xcodebuild docbuild \
+  -scheme Motley \
+  -destination 'generic/platform=macOS' \
+  -derivedDataPath "$TMPDIR/motley-docs" \
+  OTHER_DOCC_FLAGS="--warnings-as-errors" \
+  -quiet
+```
+
+That catches an unresolved symbol link, not a missing comment. The generated
+`SFSymbol` extension is hidden from docs; add new names there and keep the
+semantic names documented.

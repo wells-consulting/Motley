@@ -52,6 +52,7 @@ items behind ``Keeper`` and the files behind ``Timber/Channel``.
 - ``Labrador/TLSTrustPolicy``
 - ``Labrador/Interceptor``
 - ``Labrador/DownloadEvent``
+- ``Labrador/UploadEvent``
 - ``Labrador/FileDownloadEvent``
 - ``Labrador/FileDownloadTransfer``
 - ``LabradorError``
