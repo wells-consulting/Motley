@@ -12,9 +12,9 @@ writes CSV, ``Earl`` builds URLs, ``FuzzyDate`` reads partial dates,
 ``CurrentLocation`` gets one location fix, and ``SFSymbol`` names the symbols
 the apps draw.
 
-The package builds for iOS 18, tvOS 18, watchOS 11 and macOS 15. It has no
-service of its own. The shared state is the coders in ``Jayson``, the keychain
-items behind ``Keeper`` and the files behind ``Timber/Channel``.
+The package builds for iOS 18, tvOS 18, watchOS 11 and macOS 15. It talks to no
+service. The shared state is the coders in ``Jayson``, the keychain items
+behind ``Keeper`` and the files behind ``Timber/Channel``.
 
 ## Topics
 

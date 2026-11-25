@@ -54,9 +54,9 @@ let stations: [Station] = try await client.get(
 )
 ```
 
-`post`, `put`, `patch` and `delete` take a body: a `URLRequest`, raw `Data`, an
-`Encodable` value, a ``MultipartForm`` or a ``URLEncodedForm``. The body is
-encoded with the client's ``Jayson``.
+`post`, `put`, `patch` and `delete` take a body: raw `Data`, an `Encodable`
+value, a ``MultipartForm`` or a ``URLEncodedForm``. The body is encoded with
+the client's ``Jayson``.
 
 ```swift
 let created: Station = try await client.post(

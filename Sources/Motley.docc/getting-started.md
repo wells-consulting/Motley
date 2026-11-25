@@ -98,7 +98,7 @@ When one field can fail without taking the response down, wrap it in
 - <doc:logging> for `Timber` channels, rotation and reading entries back.
 - <doc:json> for `Jayson`, `SafeDecodable` and `DefaultFalse`.
 - <doc:secure-storage> for `Keeper` and the keychain.
-- <doc:errors> for `MotleyError` and what each error type carries.
+- <doc:errors> for `MotleyError` and what each error type has.
 
 The smaller modules are in <doc:small-helpers>: `Earl`, `Casey`, `FuzzyDate`
 and `CurrentLocation`.
