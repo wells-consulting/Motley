@@ -13,12 +13,12 @@ import Foundation
 /// reports — not as a device identifier.
 public struct StableIdentifier: Sendable {
 
-    /// Stable two-word phrase for this seed, e.g. "amber-harbor".
+    /// Stable two-word phrase for this seed, e.g. `"amber_harbor"`.
     ///
     /// Resolved once at init from a Keychain-persisted seed. The seed is
-    /// generated on first access and saved; subsequent launches load the
-    /// saved value. Returns "unknown" only if the Keychain is completely
-    /// unavailable.
+    /// generated on first access and saved; later launches load the saved
+    /// value. If the Keychain is unavailable, the phrase is new on each
+    /// launch.
     public let phrase: String
 
     /// Creates a stable identifier backed by the Keychain.

@@ -3,6 +3,9 @@
 // Copyright 2025-2026 Wells Consulting.
 //
 
+/// Facts about the package.
 public enum MotleyInfo {
-    public static let version = "1.0.0"
+
+    /// The package version. Keep this in step with the newest tag.
+    public static let version = "1.1.0"
 }

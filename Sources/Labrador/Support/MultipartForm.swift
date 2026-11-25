@@ -83,9 +83,15 @@ public final class MultipartForm {
         return self
     }
 
-    public func addindField(name: String, value: UUID) -> Self {
+    /// Adds the UUID as its uppercase string form.
+    public func addingField(name: String, value: UUID) -> Self {
         contents.append(StringContent(value: value.uuidString, name: name))
         return self
+    }
+
+    @available(*, deprecated, renamed: "addingField(name:value:)")
+    public func addindField(name: String, value: UUID) -> Self {
+        addingField(name: name, value: value)
     }
 
     public func addingField(name: String, value: Data, savingTo filename: String) -> Self {

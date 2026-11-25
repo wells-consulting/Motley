@@ -61,7 +61,7 @@ public final class Earl {
         return absoluteString
     }
 
-    // MARK: - Initializerss
+    // MARK: - Initializers
 
     /// Initialize an empty builder.
     ///

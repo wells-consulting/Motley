@@ -5,9 +5,10 @@
 
 import Foundation
 
-/// All Errors thrown by Motely conforms to this protocol. The only
-/// required property is summary. All the others have reasonable
-/// defaults.
+/// Errors thrown by Motley conform to this protocol.
+///
+/// Only ``summary`` is required. The rest have defaults, so an error type can
+/// start with a message and add detail where it helps.
 public protocol MotleyError: LocalizedError {
     var summary: String { get }
     var details: String? { get }
