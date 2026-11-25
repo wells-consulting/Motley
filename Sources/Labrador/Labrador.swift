@@ -38,7 +38,7 @@ public actor Labrador {
     /// Creates a new `Labrador` instance with the given configuration.
     /// - Parameter configuration: Client-wide settings including base URL, headers,
     ///   auth token, caching, retry policy, and logging options.
-    ///   Defaults to ``Configuration/init()`` when omitted.
+    ///   Defaults to a configuration with default values when omitted.
     public init(configuration: Configuration = .init()) {
 
         if let urlSession = configuration.urlSession {

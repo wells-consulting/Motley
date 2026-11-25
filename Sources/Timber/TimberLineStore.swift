@@ -13,10 +13,10 @@ import Foundation
 /// routed through `os.Logger`/console, so security-sensitive logging produces
 /// no console noise and no recursion risk.
 ///
-/// The two storage types share every rotation primitive from
-/// ``TimberFileRotation`` (rotate if over budget, append a newline-delimited
-/// line, read back, delete all), so size-based rotation behaves identically;
-/// they differ only in what they write and where logs are routed.
+/// The two storage types share the same rotation code: rotate if over budget,
+/// append a newline-delimited line, read back, delete all. Size-based rotation
+/// behaves the same in both. They differ only in what they write and where the
+/// logs are routed.
 public actor TimberLineStore {
 
     // MARK: - Properties

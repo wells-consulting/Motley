@@ -13,7 +13,7 @@ import os
 /// The persisted `category` of each entry is **call-derived**: by default it
 /// is the file the logging call site lives in (from `#fileID`), unless
 /// overridden with an explicit `category:` on the logging call. The
-/// `category:` given at ``init`` is a separate, coarser facet that only
+/// `category:` given at init is a separate, coarser facet that only
 /// labels the `os.Logger` `(subsystem, category)` pair and is never written
 /// to the channel.
 
@@ -51,6 +51,8 @@ public struct Timber: Sendable {
     ///   - category: A coarse, static label for `os.Logger` grouping (e.g.
     ///     `"network"`, `"ui"`). Defaults to `#fileID`. Independent from the
     ///     per-entry, call-derived `category:` on each logging call.
+    ///   - formatting: What each line includes. Defaults to `nil`, which uses
+    ///     the source location and parameter labels.
     ///   - channel: A ``Channel`` to persist entries to. Defaults to `nil`
     ///     (no persistence — messages still reach `os.Logger`).
     ///   - minimumPersistedLevel: Only entries at or above this level are

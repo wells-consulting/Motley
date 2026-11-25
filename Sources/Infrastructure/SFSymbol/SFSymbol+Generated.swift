@@ -5,6 +5,7 @@
 
 import Foundation
 
+@_documentation(visibility: internal)
 public extension SFSymbol {
     @available(iOS 13.0, macOS 10.15, watchOS 6.0, tvOS 13.0, visionOS 1.0, *)
     static let _0_circle = SFSymbol(rawValue: "0.circle")
