@@ -59,6 +59,21 @@ Scripts/format.sh    # swift format
 `.swift-format` is the formatting source of truth, and SwiftLint runs as a
 build plugin, so a warning is a failure.
 
+## Tags
+
+A tag is permanent once it's pushed. Apps pin Motley by version, and SwiftPM
+remembers the revision it first saw for each version, so a tag that moves
+fails the resolve on every machine that already had the old one. That's why
+`v1.1.0` had to be replaced by `v1.2.0` instead of fixed in place.
+
+- `.githooks/pre-push` refuses a push that moves or deletes a tag the remote
+  already has. Turn the hooks on in a clone with
+  `git config core.hooksPath .githooks`.
+- To release a change, bump `MotleyInfo.version` and tag a number nobody has
+  used. If the hook fires, that's the answer, not an obstacle.
+- `Scripts/check-tags.sh` compares the local tags with `github` by commit, for
+  when one has already moved.
+
 ## Doc comments
 
 The public API is also the documentation site, so a doc comment is reference

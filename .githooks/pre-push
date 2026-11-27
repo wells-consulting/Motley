@@ -1,0 +1,101 @@
+#!/bin/bash
+#
+# Refuses a push that moves or deletes a tag the remote already has.
+#
+# Apps pin Motley by version, and SwiftPM remembers the revision it first saw
+# for each version. Move the tag and every machine that resolved the old one
+# fails with:
+#
+#   Revision ... does not match previously recorded value ...
+#
+# A release is a new version, never a new place for an old tag. The one
+# exception is a tag whose commit doesn't change, which is harmless, so that
+# is allowed.
+#
+# Turn the hook on with:
+#
+#   git config core.hooksPath .githooks
+#
+# To rewrite a tag on purpose, push with MOTLEY_ALLOW_TAG_REWRITE=1.
+
+set -uo pipefail
+
+remote_name=${1:-origin}
+remote_url=${2:-$remote_name}
+
+# A line like "refs/tags/v1.1.0" and the object it points at.
+blocks=()
+
+# The remote's tags, fetched once, only when a tag is actually being pushed.
+listing=""
+
+while read -r local_ref local_oid remote_ref remote_oid; do
+    case $remote_ref in
+    refs/tags/*) ;;
+    *) continue ;;
+    esac
+
+    tag=${remote_ref#refs/tags/}
+
+    if [[ $local_ref == "(delete)" ]]; then
+        blocks+=("$tag is on $remote_name, and this push deletes it")
+        continue
+    fi
+
+    # All zeros means the remote doesn't have the tag yet.
+    if [[ $remote_oid =~ ^0+$ ]]; then
+        continue
+    fi
+
+    local_commit=$(git rev-parse --verify --quiet "$local_oid^{}" || true)
+    if [[ -z $local_commit ]]; then
+        continue
+    fi
+
+    # Ask the remote what the tag resolves to. It may hold a different tag
+    # object for the same commit, and that changes nothing for a consumer.
+    # The listing is fetched whole because a pattern leaves out the "^{}" line
+    # that names an annotated tag's commit.
+    if [[ -z $listing ]]; then
+        listing=$(git ls-remote --tags "$remote_url" 2>/dev/null || true)
+        if [[ -z $listing ]]; then
+            echo "warning: couldn't compare $tag with $remote_name, letting it through" >&2
+            continue
+        fi
+    fi
+
+    remote_commit=$(printf '%s\n' "$listing" | awk -v ref="$remote_ref^{}" '$2 == ref { print $1; exit }')
+    if [[ -z $remote_commit ]]; then
+        remote_commit=$(printf '%s\n' "$listing" | awk -v ref="$remote_ref" '$2 == ref { print $1; exit }')
+    fi
+
+    if [[ -n $remote_commit && $remote_commit != "$local_commit" ]]; then
+        blocks+=("$tag moves from ${remote_commit:0:7} to ${local_commit:0:7}")
+    fi
+done
+
+if [[ ${#blocks[@]} -eq 0 ]]; then
+    exit 0
+fi
+
+if [[ ${MOTLEY_ALLOW_TAG_REWRITE:-0} == "1" ]]; then
+    echo "warning: rewriting published tags because MOTLEY_ALLOW_TAG_REWRITE is set" >&2
+    exit 0
+fi
+
+{
+    echo "error: refusing to move a tag that is already published"
+    echo
+    for block in "${blocks[@]}"; do
+        echo "  $block"
+    done
+    echo
+    echo "SwiftPM remembers the revision it first saw for a version, so moving a"
+    echo "tag breaks the build on every machine that already resolved it."
+    echo
+    echo "Cut a new version instead: bump Sources/MotleyInfo.swift, commit, and"
+    echo "tag a number nobody has used. To rewrite the tag on purpose, push with"
+    echo "MOTLEY_ALLOW_TAG_REWRITE=1."
+} >&2
+
+exit 1

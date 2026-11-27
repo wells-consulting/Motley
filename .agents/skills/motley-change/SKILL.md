@@ -55,6 +55,8 @@ Motley is consumed by other repos, all by version. A change isn't visible to the
    ```
 
    `git remote -v` shows which remote the consumers clone; `github` is the one they resolve from.
+
+   The `pre-push` hook refuses to move or delete a tag the remote already has. If it fires, cut a new version instead of forcing the old tag through: SwiftPM remembers the revision it first saw, so a moved tag is a build failure on machines that resolved the old one.
 4. Raise the pin in every consumer:
    - SwiftPM packages: `Package.swift` `.package(url: ...Motley, from:)`
    - Xcode projects: `XCRemoteSwiftPackageReference` `minimumVersion` in `project.pbxproj`, then
@@ -69,4 +71,5 @@ Motley is consumed by other repos, all by version. A change isn't visible to the
 - [ ] Formatted
 - [ ] An assistant's commit ends `Assisted-by: AI (<model>)`, with no `Co-Authored-By`
 - [ ] Tagged and pushed if the apps need it
+- [ ] The tag is a number nobody has used, and `Scripts/check-tags.sh` is clean
 - [ ] Consumers' pins raised and resolved
