@@ -41,5 +41,6 @@ jobs:
           -scheme Motley
           -destination 'generic/platform=macOS'
           -derivedDataPath "$RUNNER_TEMP/dd"
+          -skipPackagePluginValidation
           OTHER_DOCC_FLAGS="--warnings-as-errors"
           -quiet
