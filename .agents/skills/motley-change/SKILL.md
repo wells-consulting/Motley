@@ -43,7 +43,7 @@ SwiftLint runs as a build plugin, so a warning is a failure, not a note.
 
 ## 4. Release, because the apps pin a version
 
-Motley is consumed by **Motley**, **Motley** and **Motley**, all by version. A change isn't visible to them until it's tagged.
+Motley is consumed by other repos, all by version. A change isn't visible to them until it's tagged.
 
 1. Commit with the repo's style: `v1.2.3 – Adds the retry-after header`. An assistant's body ends with `Assisted-by: AI (<model>)`, never a `Co-Authored-By` or "Generated with" line.
 2. Tag it with `git tag -a v1.2.3 -m "v1.2.3"`, so the tag carries a tagger and a date.
@@ -56,11 +56,11 @@ Motley is consumed by **Motley**, **Motley** and **Motley**, all by version. A c
 
    `git remote -v` shows which remote the consumers clone; `github` is the one they resolve from.
 4. Raise the pin in every consumer:
-   - Motley: `Package.swift` `.package(url: ...Motley, from:)`
-   - Motley and Motley: `XCRemoteSwiftPackageReference` `minimumVersion` in `project.pbxproj`, then
+   - SwiftPM packages: `Package.swift` `.package(url: ...Motley, from:)`
+   - Xcode projects: `XCRemoteSwiftPackageReference` `minimumVersion` in `project.pbxproj`, then
      `xcodebuild -resolvePackageDependencies -project <name>.xcodeproj -scheme <name>`
 
-Motley's own bump then flows on to its consumers; release it the same way rather than stopping at the pin.
+   If a consumer is itself pinned by another repo, release it the same way instead of stopping at the bump.
 
 ## Checklist
 

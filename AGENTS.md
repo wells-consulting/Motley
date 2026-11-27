@@ -1,8 +1,8 @@
 # Agent guide for Motley
 
-Motley is the Swift toolkit the apps here are built on: HTTP, JSON, logging,
-CSV, secure storage, location and the SF Symbol names. Motley, Motley and
-Motley each take it by version, so a change isn't theirs until it's tagged.
+Motley is the Swift toolkit our apps are built on: HTTP, JSON, logging, CSV,
+secure storage, location and the SF Symbol names. They take it by version, so a
+change isn't live until it's tagged.
 
 Read [VOICE.md](VOICE.md) before you write a comment, a doc comment, a name, a
 log message, UI text or a commit message. If this file and VOICE.md disagree,
@@ -31,8 +31,8 @@ One module, `Motley`, one product, and a folder per job under `Sources/`:
 ## Requirements
 
 - Swift 6.4 tools, Swift 6 language mode, strict concurrency.
-- iOS 18, tvOS 18, watchOS 11, macOS 15. Raising the floor breaks three apps,
-  so check `Package.swift` before you use a new API.
+- iOS 18, tvOS 18, watchOS 11, macOS 15. Raising the floor breaks the apps that
+  use it, so check `Package.swift` before you use a new API.
 - One dependency, `SwiftLintPlugins`, and only as a build plugin.
 
 ## Rules
@@ -44,9 +44,9 @@ One module, `Motley`, one product, and a folder per job under `Sources/`:
   `Text(_, format:)` in a view.
 - No `DispatchQueue`. Async/await first.
 - No UIKit or AppKit. This is the model and network layer; anything that draws
-  belongs in Motley.
-- The public API is shared by three repos, so a rename or a removed default is
-  a breaking change in all three.
+  belongs in the app.
+- The public API is shared by more than one repo, so a rename or a removed
+  default is a breaking change in all of them.
 
 ## Build and test
 

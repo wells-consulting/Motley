@@ -1,7 +1,7 @@
 # Motley
 
-The Swift toolkit behind Motley, Motley and Motley: HTTP, JSON, logging,
-CSV, secure storage, location, fuzzy dates and the SF Symbol names.
+A Swift toolkit for Apple platforms: HTTP, JSON, logging, CSV, secure storage,
+location, fuzzy dates and the SF Symbol names.
 
 [![Documentation](https://img.shields.io/badge/documentation-DocC-blue)](https://swiftpackageindex.com/wells-consulting/motley/documentation/motley)
 
