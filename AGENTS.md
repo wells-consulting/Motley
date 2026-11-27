@@ -48,6 +48,10 @@ One module, `Motley`, one product, and a folder per job under `Sources/`:
 - The public API is shared by more than one repo, so a rename or a removed
   default is a breaking change in all of them.
 
+## Disclosure
+
+`AI-DISCLOSURE.md` is the same file in every package I publish. If you change it, change it in all of them.
+
 ## Build and test
 
 ```sh

@@ -90,6 +90,10 @@ swift test
 swift format lint --strict --configuration .swift-format --recursive Sources
 ```
 
+## AI disclosure
+
+Some of this code was written with AI agents. [AI-DISCLOSURE.md](AI-DISCLOSURE.md) covers what that means here.
+
 ## License
 
 MIT. See `LICENSE`.
