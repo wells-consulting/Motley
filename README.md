@@ -23,7 +23,7 @@ The package is Apple platforms only. `Keeper` uses the Security framework,
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/wells-consulting/Motley.git", from: "1.1.0"),
+    .package(url: "https://github.com/wells-consulting/Motley.git", from: "1.2.0"),
 ]
 ```
 
