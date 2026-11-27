@@ -1,7 +1,7 @@
 # ``Motley``
 
-A Swift toolkit for the apps here: HTTP, JSON, logging, CSV, secure storage,
-location, fuzzy dates and the SF Symbol names.
+A motley assortment of handy Swift bits: HTTP, JSON, logging, CSV, secure
+storage, location, fuzzy dates and the SF Symbol names.
 
 ## Overview
 
