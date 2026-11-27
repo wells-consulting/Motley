@@ -1,15 +1,15 @@
 #!/bin/bash
 #
-# voice-check.sh
+# check-voice.sh
 #
 # Counts the words and punctuation VOICE.md says to avoid, so we can see them
 # go down as we clean up.
 #
 # Usage:
-#   voice-check.sh                    Counts per folder, comments only
-#   voice-check.sh <path>...          Same, for one or more paths
-#   voice-check.sh --all              Count every line, not just comments
-#   voice-check.sh --diff [rev]       Show added lines that hit, against rev
+#   check-voice.sh                    Counts per folder, comments only
+#   check-voice.sh <path>...          Same, for one or more paths
+#   check-voice.sh --all              Count every line, not just comments
+#   check-voice.sh --diff [rev]       Show added lines that hit, against rev
 #                                     (default HEAD, so unstaged and staged
 #                                     changes)
 #
@@ -74,7 +74,7 @@ if [[ "${1:-}" == "--diff" ]]; then
                 hits=$((hits + 1))
             fi
         done
-    done < <(git diff "$rev" --unified=0 --no-color -- . ':!VOICE.md' ':!**/voice-check.sh' |
+    done < <(git diff "$rev" --unified=0 --no-color -- . ':!VOICE.md' ':!**/check-voice.sh' |
         awk '/^\+\+\+ b\// { file = substr($0, 7); next }
              /^\+/ && !/^\+\+\+/ { print file ": " substr($0, 2) }')
     echo "$hits hits"
